@@ -1,15 +1,29 @@
--- FlagRisk website schema: roles, referral engine, payouts, web subscriptions.
--- Runs on the existing Supabase project (ref aqgkntulbuqqqjxjafmw) alongside the
--- mobile app's tables. Everything here is prefixed/scoped so it does not collide
--- with the app. Safe to re-run (IF NOT EXISTS / OR REPLACE throughout).
+-- FlagRisk website schema, part 1 of 2: net-new objects only.
+--
+-- This runs on the SHARED Supabase project (ref aqgkntulbuqqqjxjafmw) that also
+-- serves the mobile app and the WhatsApp bot. Everything in this file is new and
+-- touches NOTHING the app already owns:
+--   * it creates no table that already exists (the app has profiles,
+--     subscriptions, payments, network_connections, notifications, trips,
+--     saved_places, reports, risk_categories, notification_preferences);
+--   * it defines no function the app already uses, and the one name that could
+--     have collided (is_admin) is renamed web_is_admin.
+--
+-- Subscriptions are NOT handled here. The app's paystack-init / paystack-verify
+-- Edge Functions own profiles.current_tier, subscriptions and payments; the
+-- website reuses them. The referral "paid_plan" and "circle" milestones are
+-- awarded by triggers in 0002_web_triggers.sql, which does touch app tables and
+-- is kept separate so it can be reviewed on its own.
+--
+-- Safe to re-run (IF NOT EXISTS / OR REPLACE throughout).
 
 -- =========================================================================
 -- 0. Extensions
 -- =========================================================================
-create extension if not exists pgcrypto;  -- gen_random_uuid / gen_random_bytes
+create extension if not exists pgcrypto;
 
 -- =========================================================================
--- 1. Roles (who is an admin of the web console)
+-- 1. Website admin roles (the web console is new; the app has no admin flag)
 -- =========================================================================
 create table if not exists public.web_roles (
   user_id    uuid primary key references auth.users(id) on delete cascade,
@@ -19,14 +33,12 @@ create table if not exists public.web_roles (
 
 alter table public.web_roles enable row level security;
 
--- A user may read only their own role row.
 drop policy if exists web_roles_self_read on public.web_roles;
 create policy web_roles_self_read on public.web_roles
   for select using (auth.uid() = user_id);
 
--- is_admin(): true when the current user is flagged admin. SECURITY DEFINER so
--- it can read web_roles regardless of the caller's RLS.
-create or replace function public.is_admin()
+-- Named web_is_admin to avoid clobbering any existing is_admin() in public.
+create or replace function public.web_is_admin()
 returns boolean
 language sql
 stable
@@ -39,10 +51,9 @@ as $$
   );
 $$;
 
--- Admins can read every role row.
 drop policy if exists web_roles_admin_read on public.web_roles;
 create policy web_roles_admin_read on public.web_roles
-  for select using (public.is_admin());
+  for select using (public.web_is_admin());
 
 -- =========================================================================
 -- 2. Referral codes (one stable code per member)
@@ -59,7 +70,6 @@ drop policy if exists referral_codes_self_read on public.referral_codes;
 create policy referral_codes_self_read on public.referral_codes
   for select using (auth.uid() = user_id);
 
--- generate_referral_code(): a short, unambiguous, upper-case code.
 create or replace function public.generate_referral_code()
 returns text
 language plpgsql
@@ -77,8 +87,6 @@ begin
 end;
 $$;
 
--- ensure_referral_code(): return the caller's code, creating one if absent.
--- Retries on the rare unique collision.
 create or replace function public.ensure_referral_code()
 returns text
 language plpgsql
@@ -87,8 +95,8 @@ security definer
 set search_path = public
 as $$
 declare
-  uid      uuid := auth.uid();
-  existing text;
+  uid       uuid := auth.uid();
+  existing  text;
   candidate text;
 begin
   if uid is null then
@@ -106,21 +114,21 @@ begin
       insert into public.referral_codes (user_id, code) values (uid, candidate);
       return candidate;
     exception when unique_violation then
-      -- code already taken; loop and try another
+      -- collision; try another
     end;
   end loop;
 end;
 $$;
 
 -- =========================================================================
--- 3. Referrals (who referred whom — one row per referred person)
+-- 3. Referrals (who referred whom)
 -- =========================================================================
 create table if not exists public.referrals (
-  id            uuid primary key default gen_random_uuid(),
-  referrer_id   uuid not null references auth.users(id) on delete cascade,
-  referred_id   uuid not null unique references auth.users(id) on delete cascade,
-  code          text not null,
-  created_at    timestamptz not null default now(),
+  id          uuid primary key default gen_random_uuid(),
+  referrer_id uuid not null references auth.users(id) on delete cascade,
+  referred_id uuid not null unique references auth.users(id) on delete cascade,
+  code        text not null,
+  created_at  timestamptz not null default now(),
   constraint referrals_no_self check (referrer_id <> referred_id)
 );
 
@@ -128,14 +136,13 @@ create index if not exists referrals_referrer_idx on public.referrals(referrer_i
 
 alter table public.referrals enable row level security;
 
--- A member can see the people they referred, and their own referred-by row.
 drop policy if exists referrals_self_read on public.referrals;
 create policy referrals_self_read on public.referrals
   for select using (auth.uid() = referrer_id or auth.uid() = referred_id);
 
 drop policy if exists referrals_admin_read on public.referrals;
 create policy referrals_admin_read on public.referrals
-  for select using (public.is_admin());
+  for select using (public.web_is_admin());
 
 -- =========================================================================
 -- 4. Referral rewards (one row per earned milestone)
@@ -147,8 +154,7 @@ create table if not exists public.referral_rewards (
   milestone    text not null check (milestone in ('signup','circle','paid_plan')),
   amount_naira integer not null check (amount_naira >= 0),
   created_at   timestamptz not null default now(),
-  -- each milestone pays out at most once per referred person
-  unique (referred_id, milestone)
+  unique (referred_id, milestone)      -- each milestone pays at most once per person
 );
 
 create index if not exists referral_rewards_referrer_idx on public.referral_rewards(referrer_id);
@@ -161,55 +167,13 @@ create policy referral_rewards_self_read on public.referral_rewards
 
 drop policy if exists referral_rewards_admin_read on public.referral_rewards;
 create policy referral_rewards_admin_read on public.referral_rewards
-  for select using (public.is_admin());
-
--- record_referral(p_code): called once, just after a new user signs up, to
--- attach them to their referrer and award the signup milestone atomically.
--- SECURITY DEFINER: the new user writes a row keyed to someone else (referrer).
-create or replace function public.record_referral(p_code text)
-returns void
-language plpgsql
-volatile
-security definer
-set search_path = public
-as $$
-declare
-  uid        uuid := auth.uid();
-  v_referrer uuid;
-begin
-  if uid is null then
-    raise exception 'not authenticated';
-  end if;
-  if p_code is null or length(trim(p_code)) = 0 then
-    return;  -- nothing to do
-  end if;
-
-  select user_id into v_referrer
-  from public.referral_codes
-  where code = upper(trim(p_code));
-
-  -- unknown code, or self-referral: ignore silently
-  if v_referrer is null or v_referrer = uid then
-    return;
-  end if;
-
-  -- already attributed to a referrer? leave it.
-  if exists (select 1 from public.referrals where referred_id = uid) then
-    return;
-  end if;
-
-  insert into public.referrals (referrer_id, referred_id, code)
-  values (v_referrer, uid, upper(trim(p_code)));
-
-  -- award the signup milestone immediately
-  perform public.award_referral_reward(uid, 'signup');
-end;
-$$;
+  for select using (public.web_is_admin());
 
 -- award_referral_reward(p_referred, p_milestone): grant one milestone reward to
 -- whoever referred p_referred, if not already granted. Idempotent via the
--- unique(referred_id, milestone) constraint. SECURITY DEFINER so trusted server
--- code (webhooks) and the circle trigger can call it.
+-- unique(referred_id, milestone) constraint. SECURITY DEFINER so trusted code
+-- and the 0002 triggers can call it. Callable by trusted server code; NOT
+-- granted to authenticated, so members cannot mint their own rewards.
 create or replace function public.award_referral_reward(p_referred uuid, p_milestone text)
 returns void
 language plpgsql
@@ -226,7 +190,7 @@ begin
   where referred_id = p_referred;
 
   if v_referrer is null then
-    return;  -- this person was not referred by anyone
+    return;  -- not referred by anyone
   end if;
 
   v_amount := case p_milestone
@@ -245,45 +209,55 @@ begin
 end;
 $$;
 
+-- record_referral(p_code): called once, just after a new user signs up, to
+-- attach them to their referrer and award the signup milestone.
+create or replace function public.record_referral(p_code text)
+returns void
+language plpgsql
+volatile
+security definer
+set search_path = public
+as $$
+declare
+  uid        uuid := auth.uid();
+  v_referrer uuid;
+begin
+  if uid is null then
+    raise exception 'not authenticated';
+  end if;
+  if p_code is null or length(trim(p_code)) = 0 then
+    return;
+  end if;
+
+  select user_id into v_referrer
+  from public.referral_codes
+  where code = upper(trim(p_code));
+
+  if v_referrer is null or v_referrer = uid then
+    return;  -- unknown code or self-referral
+  end if;
+
+  if exists (select 1 from public.referrals where referred_id = uid) then
+    return;  -- already attributed
+  end if;
+
+  insert into public.referrals (referrer_id, referred_id, code)
+  values (v_referrer, uid, upper(trim(p_code)));
+
+  perform public.award_referral_reward(uid, 'signup');
+end;
+$$;
+
 -- =========================================================================
--- 5. Website subscriptions (plan a member bought on web/WhatsApp)
--- =========================================================================
-create table if not exists public.website_subscriptions (
-  id                 uuid primary key default gen_random_uuid(),
-  user_id            uuid not null references auth.users(id) on delete cascade,
-  tier               text not null,         -- 'standard' | 'pro' | 'premium'
-  status             text not null default 'inactive'
-                       check (status in ('inactive','active','past_due','cancelled')),
-  amount_naira       integer not null,
-  paystack_ref       text,                  -- last successful transaction ref
-  paystack_customer  text,
-  current_period_end timestamptz,
-  created_at         timestamptz not null default now(),
-  updated_at         timestamptz not null default now()
-);
-
-create index if not exists website_subscriptions_user_idx on public.website_subscriptions(user_id);
-
-alter table public.website_subscriptions enable row level security;
-
-drop policy if exists website_subscriptions_self_read on public.website_subscriptions;
-create policy website_subscriptions_self_read on public.website_subscriptions
-  for select using (auth.uid() = user_id);
-
-drop policy if exists website_subscriptions_admin_read on public.website_subscriptions;
-create policy website_subscriptions_admin_read on public.website_subscriptions
-  for select using (public.is_admin());
-
--- =========================================================================
--- 6. Payout recipients (Paystack transfer recipient per member)
+-- 5. Payout recipients (Paystack transfer recipient per member)
 -- =========================================================================
 create table if not exists public.payout_recipients (
-  user_id         uuid primary key references auth.users(id) on delete cascade,
-  bank_code       text not null,
-  account_number  text not null,
-  account_name    text not null,
-  recipient_code  text not null,            -- Paystack recipient code (RCP_...)
-  created_at      timestamptz not null default now()
+  user_id        uuid primary key references auth.users(id) on delete cascade,
+  bank_code      text not null,
+  account_number text not null,
+  account_name   text not null,
+  recipient_code text not null,          -- Paystack recipient code (RCP_...)
+  created_at     timestamptz not null default now()
 );
 
 alter table public.payout_recipients enable row level security;
@@ -294,22 +268,22 @@ create policy payout_recipients_self_read on public.payout_recipients
 
 drop policy if exists payout_recipients_admin_read on public.payout_recipients;
 create policy payout_recipients_admin_read on public.payout_recipients
-  for select using (public.is_admin());
+  for select using (public.web_is_admin());
 
 -- =========================================================================
--- 7. Payouts (a withdrawal of referral earnings)
+-- 6. Payouts (a withdrawal of referral earnings)
 -- =========================================================================
 create table if not exists public.payouts (
-  id              uuid primary key default gen_random_uuid(),
-  user_id         uuid not null references auth.users(id) on delete cascade,
-  amount_naira    integer not null check (amount_naira > 0),
-  status          text not null default 'pending'
-                    check (status in ('pending','processing','paid','failed','reversed')),
+  id           uuid primary key default gen_random_uuid(),
+  user_id      uuid not null references auth.users(id) on delete cascade,
+  amount_naira integer not null check (amount_naira > 0),
+  status       text not null default 'pending'
+                 check (status in ('pending','processing','paid','failed','reversed')),
   paystack_transfer_code text,
-  paystack_ref    text,
-  failure_reason  text,
-  created_at      timestamptz not null default now(),
-  updated_at      timestamptz not null default now()
+  paystack_ref text,
+  failure_reason text,
+  created_at   timestamptz not null default now(),
+  updated_at   timestamptz not null default now()
 );
 
 create index if not exists payouts_user_idx on public.payouts(user_id);
@@ -322,14 +296,13 @@ create policy payouts_self_read on public.payouts
 
 drop policy if exists payouts_admin_read on public.payouts;
 create policy payouts_admin_read on public.payouts
-  for select using (public.is_admin());
+  for select using (public.web_is_admin());
 
--- my_referral_balance(): lifetime earned, already paid/locked, and withdrawable.
--- SECURITY DEFINER so it can sum across rewards and payouts for the caller only.
+-- my_referral_balance(): earned, committed (paid + in-flight), and available.
 create or replace function public.my_referral_balance()
 returns table (
   earned_naira    integer,
-  paid_naira      integer,   -- paid + in-flight (pending/processing)
+  paid_naira      integer,
   available_naira integer
 )
 language sql
@@ -349,16 +322,13 @@ as $$
     where user_id = uid.id
       and status in ('pending','processing','paid')
   )
-  select
-    earned.total,
-    committed.total,
-    (earned.total - committed.total)
+  select earned.total, committed.total, (earned.total - committed.total)
   from earned, committed;
 $$;
 
 -- request_payout(p_amount): create a pending payout if the member has the funds
--- and a payout recipient on file. Returns the new payout id. The actual Paystack
--- transfer is kicked off by trusted server code after this returns.
+-- and a payout account. The Paystack transfer is fired by trusted server code
+-- after this returns.
 create or replace function public.request_payout(p_amount integer)
 returns uuid
 language plpgsql
@@ -367,9 +337,9 @@ security definer
 set search_path = public
 as $$
 declare
-  uid        uuid := auth.uid();
-  v_avail    integer;
-  v_payout   uuid;
+  uid     uuid := auth.uid();
+  v_avail integer;
+  v_payout uuid;
 begin
   if uid is null then
     raise exception 'not authenticated';
@@ -395,12 +365,11 @@ end;
 $$;
 
 -- =========================================================================
--- 8. Grants (authenticated users may call the RPCs; tables stay behind RLS)
+-- 7. Grants (tables stay behind RLS; only safe RPCs are callable by members)
 -- =========================================================================
-grant execute on function public.is_admin()                       to authenticated;
-grant execute on function public.ensure_referral_code()           to authenticated;
-grant execute on function public.record_referral(text)            to authenticated;
-grant execute on function public.my_referral_balance()            to authenticated;
-grant execute on function public.request_payout(integer)          to authenticated;
--- award_referral_reward is called by server (service role) and record_referral;
--- not granted to authenticated so members can't mint their own rewards.
+grant execute on function public.web_is_admin()            to authenticated;
+grant execute on function public.ensure_referral_code()    to authenticated;
+grant execute on function public.record_referral(text)     to authenticated;
+grant execute on function public.my_referral_balance()     to authenticated;
+grant execute on function public.request_payout(integer)   to authenticated;
+-- award_referral_reward is intentionally NOT granted to authenticated.

@@ -19,13 +19,6 @@ type Balance = {
   available_naira: number;
 };
 
-const STATUS_LABEL: Record<string, string> = {
-  active: "Active",
-  inactive: "No active plan",
-  past_due: "Payment due",
-  cancelled: "Cancelled",
-};
-
 export default async function DashboardPage() {
   const supabase = await createClient();
   const {
@@ -40,19 +33,18 @@ export default async function DashboardPage() {
 
   const [
     { data: balanceRows },
-    { data: subscription },
+    { data: profile },
     { data: referrals },
     { data: rewards },
     { data: payouts },
     { data: recipient },
   ] = await Promise.all([
     supabase.rpc("my_referral_balance"),
+    // The app's source of truth for a user's plan. paystack-verify sets this.
     supabase
-      .from("website_subscriptions")
-      .select("tier, status, current_period_end")
-      .eq("user_id", user.id)
-      .order("created_at", { ascending: false })
-      .limit(1)
+      .from("profiles")
+      .select("current_tier, display_name")
+      .eq("id", user.id)
       .maybeSingle(),
     supabase.from("referrals").select("referred_id, created_at"),
     supabase.from("referral_rewards").select("milestone, amount_naira"),
@@ -80,10 +72,13 @@ export default async function DashboardPage() {
     process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
   const referralUrl = `${siteUrl}/signup?ref=${code ?? ""}`;
 
-  const subStatus = subscription?.status ?? "inactive";
-  const subTier = subscription?.tier
-    ? subscription.tier.charAt(0).toUpperCase() + subscription.tier.slice(1)
-    : "Basic (free)";
+  const currentTier = (profile?.current_tier ?? "basic") as string;
+  const isPaid = ["standard", "pro", "premium"].includes(currentTier);
+  const subTier =
+    currentTier.charAt(0).toUpperCase() +
+    currentTier.slice(1) +
+    (currentTier === "basic" ? " (free)" : "");
+  const displayName = profile?.display_name ?? user.user_metadata?.full_name ?? "";
 
   return (
     <main className="min-h-screen bg-mist">
@@ -111,7 +106,7 @@ export default async function DashboardPage() {
 
       <div className="mx-auto max-w-[960px] px-5 py-10">
         <h1 className="text-2xl font-semibold text-night">
-          Welcome{user.user_metadata?.full_name ? `, ${user.user_metadata.full_name}` : ""}
+          Welcome{displayName ? `, ${displayName}` : ""}
         </h1>
         <p className="mt-1 text-slate">Your plan, your circle, your earnings.</p>
 
@@ -123,16 +118,13 @@ export default async function DashboardPage() {
             </h2>
             <p className="mt-3 text-2xl font-semibold text-night">{subTier}</p>
             <p className="mt-1 text-sm text-slate">
-              {STATUS_LABEL[subStatus] ?? subStatus}
-              {subscription?.current_period_end
-                ? ` · renews ${new Date(subscription.current_period_end).toLocaleDateString("en-NG")}`
-                : ""}
+              {isPaid ? "Active" : "Free plan, upgrade any time"}
             </p>
             <Link
               href="/plans"
               className="mt-4 inline-block rounded-[10px] bg-night px-4 py-2 text-sm font-semibold text-white transition hover:bg-dusk"
             >
-              {subStatus === "active" ? "Manage plan" : "Upgrade"}
+              {isPaid ? "Change plan" : "Upgrade"}
             </Link>
           </section>
 
