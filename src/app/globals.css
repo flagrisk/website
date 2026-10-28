@@ -1,26 +1,171 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+@theme {
+  --color-night: #1b1e3d;
+  --color-dusk: #2e2f5c;
+  --color-ink: #151917;
+  --color-slate: #6a6f73;
+  --color-line: #e8e8e6;
+  --color-parchment: #f3eee3;
+  --color-mist: #f4f4f3;
+  --color-lime: #ddee5b;
+  --color-amber: #f5a623;
+  --color-teal: #2f9e8f;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: var(--font-inter);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+:root {
+  --font-display: var(--font-sora), ui-sans-serif, system-ui, sans-serif;
+}
+
+:root {
+  --background: #ffffff;
+  --foreground: #151917;
+}
+
+html {
+  scroll-behavior: smooth;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+h1,
+h2,
+h3,
+h4 {
+  font-family: var(--font-display);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+}
+.display,
+.display-xl {
+  font-family: var(--font-display);
+}
+
+/* Nexio display headings: large, 600 weight, tight */
+.display {
+  font-size: clamp(2rem, 4.4vw, 3rem);
+  font-weight: 600;
+  letter-spacing: -0.025em;
+  line-height: 1.12;
+}
+.display-xl {
+  font-size: clamp(2.8rem, 6.2vw, 4.4rem);
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  line-height: 1.03;
+}
+
+/* ---- Pill buttons, one solid accent (indigo), like Nexio ---- */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border-radius: 999px;
+  font-weight: 600;
+  padding: 0.85rem 1.7rem;
+  line-height: 1;
+  transition: all 0.16s ease;
+  cursor: pointer;
+  white-space: nowrap;
+  border: 2px solid transparent;
+}
+.btn:hover {
+  transform: translateY(-1px);
+}
+.btn-lg {
+  padding: 1rem 2rem;
+  font-size: 1.02rem;
+}
+.btn-primary {
+  background: var(--color-night);
+  border-color: var(--color-night);
+  color: #fff;
+}
+.btn-primary:hover {
+  filter: brightness(1.35);
+}
+.btn-lime {
+  background: var(--color-lime);
+  border-color: var(--color-lime);
+  color: var(--color-ink);
+}
+.btn-lime:hover {
+  filter: brightness(0.95);
+}
+.btn-white {
+  background: #fff;
+  border-color: #fff;
+  color: var(--color-ink);
+}
+.btn-white:hover {
+  filter: brightness(0.95);
+}
+.btn-outline {
+  background: transparent;
+  color: var(--color-ink);
+  border-color: rgba(21, 25, 23, 0.18);
+}
+.btn-outline:hover {
+  border-color: var(--color-ink);
+}
+.btn-ghost {
+  background: transparent;
+  color: #fff;
+  border-color: rgba(255, 255, 255, 0.35);
+}
+.btn-ghost:hover {
+  border-color: #fff;
+}
+
+/* Eyebrow: 15px uppercase, muted (no dash), like Nexio */
+.eyebrow {
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--color-slate);
+}
+
+/* Flat grey cards, 16px radius, like Nexio service cards */
+.card-flat {
+  background: var(--color-mist);
+  border-radius: 16px;
+  transition: transform 0.2s ease, background 0.2s ease;
+}
+.card-flat:hover {
+  transform: translateY(-4px);
+}
+
+.icon-chip {
+  width: 58px;
+  height: 58px;
+  border-radius: 16px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+}
+
+.phone {
+  border-radius: 34px;
+  padding: 9px;
+  background: var(--color-ink);
+  box-shadow: 0 2px 6px rgba(20, 21, 42, 0.12), 0 30px 60px rgba(20, 21, 42, 0.3);
+}
+.phone img {
+  display: block;
+  width: 100%;
+  border-radius: 26px;
 }
