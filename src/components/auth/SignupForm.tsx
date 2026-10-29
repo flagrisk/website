@@ -7,12 +7,12 @@ import { SubmitButton } from "./SubmitButton";
 
 const initial: AuthState = { error: null };
 
-export function SignupForm({ ref }: { ref: string }) {
+export function SignupForm({ refCode }: { refCode: string }) {
   const [state, formAction] = useActionState(signUpAction, initial);
 
   return (
     <form action={formAction} className="space-y-4">
-      <input type="hidden" name="ref" value={ref} />
+      <input type="hidden" name="ref" value={refCode} />
       <Field
         label="Full name"
         name="full_name"
@@ -35,9 +35,10 @@ export function SignupForm({ ref }: { ref: string }) {
         autoComplete="new-password"
         placeholder="At least 8 characters"
       />
-      {ref && (
+      {refCode && (
         <p className="text-sm text-teal">
-          You were invited with code <span className="font-semibold">{ref}</span>.
+          You were invited with code{" "}
+          <span className="font-semibold">{refCode}</span>.
         </p>
       )}
       {state.error && (

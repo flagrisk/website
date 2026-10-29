@@ -28,7 +28,7 @@ export default async function SignupPage({
         </>
       }
     >
-      <SignupForm ref={ref} />
+      <SignupForm refCode={ref} />
     </AuthShell>
   );
 }
