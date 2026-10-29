@@ -30,6 +30,14 @@ export default async function DashboardPage() {
   // proxy.ts already gates this, but guard anyway.
   if (!user) redirect("/login?next=/dashboard");
 
+  // Attribute the referral from the invite code stored at signup, in case the
+  // email-confirmation path didn't run it. record_referral is idempotent and
+  // no-ops once attributed or for a user who wasn't referred.
+  const inviteCode = user.user_metadata?.ref_code as string | undefined;
+  if (inviteCode) {
+    await supabase.rpc("record_referral", { p_code: inviteCode });
+  }
+
   // Make sure the member has a referral code, then load everything in parallel.
   const { data: code } = await supabase.rpc("ensure_referral_code");
 
