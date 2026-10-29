@@ -29,7 +29,8 @@ export default async function CheckoutPage({
   }
   const hasEmail = !!user.email;
 
-  const amount = cycle === "annual" ? tier.monthly * 12 : tier.monthly;
+  // Annual is two months free (10 months), matching tier_prices / paystack-init.
+  const amount = cycle === "annual" ? tier.monthly * 10 : tier.monthly;
   const priceLabel = formatNaira(amount);
 
   return (

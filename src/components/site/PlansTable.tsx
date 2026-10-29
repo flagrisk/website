@@ -6,9 +6,9 @@ import Link from "next/link";
 import { TIERS, formatNaira } from "@/lib/tiers";
 import { CheckIcon } from "./Icons";
 
-// Annual billing charges 12 months up front for now (no discount set yet).
-// Change MONTHS_CHARGED_ANNUAL to e.g. 10 to give "2 months free".
-const MONTHS_CHARGED_ANNUAL = 12;
+// Annual billing is "two months free": 10 months charged up front. This matches
+// the tier_prices table that paystack-init charges from.
+const MONTHS_CHARGED_ANNUAL = 10;
 
 export function PlansTable() {
   const [annual, setAnnual] = useState(false);
