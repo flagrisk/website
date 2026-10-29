@@ -17,20 +17,33 @@ export async function startCheckout(
 ): Promise<CheckoutInit> {
   const supabase = await createClient();
   const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) {
+    data: { session },
+  } = await supabase.auth.getSession();
+  if (!session?.user) {
     return { ok: false, error: "Please log in first.", needsAuth: true };
   }
 
+  // Forward the user's JWT explicitly: paystack-init authenticates the caller,
+  // and the server-side client doesn't always attach the session token on its own.
   const { data, error } = await supabase.functions.invoke("paystack-init", {
     body: { tier, billing_interval: cycle, country: "NG" },
+    headers: { Authorization: `Bearer ${session.access_token}` },
   });
 
   if (error || !data?.access_code) {
-    const message =
-      (data && typeof data.error === "string" && data.error) ||
-      "Checkout could not be started. Please try again.";
+    let message = "Checkout could not be started. Please try again.";
+    // The Edge Function's real error is in error.context (a Response).
+    try {
+      const ctx = (error as { context?: { json?: () => Promise<unknown> } })
+        ?.context;
+      if (ctx?.json) {
+        const body = (await ctx.json()) as { error?: string };
+        if (body?.error) message = body.error;
+      }
+    } catch {
+      /* fall back to the generic message */
+    }
+    if (data && typeof data.error === "string") message = data.error;
     return { ok: false, error: message };
   }
 
