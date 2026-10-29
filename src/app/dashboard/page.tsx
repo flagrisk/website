@@ -200,7 +200,10 @@ export default async function DashboardPage() {
             )}
           </div>
 
-          <ShareMessages referralUrl={referralUrl} />
+          <ShareMessages
+            referrerName={displayName}
+            botNumber={process.env.NEXT_PUBLIC_WHATSAPP_BOT_NUMBER ?? ""}
+          />
         </section>
 
         {/* Payout account */}
