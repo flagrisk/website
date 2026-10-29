@@ -74,10 +74,9 @@ export async function verifyOtpAction(
   });
 
   if (error) {
+    // Surface the real gotrue message/code while we stabilise phone auth.
     return {
-      error: /expired/i.test(error.message)
-        ? "That code has expired. Send a new one."
-        : "That code is not right. Check and try again.",
+      error: `Could not confirm (${error.status ?? "?"} ${error.code ?? ""}): ${error.message}`,
     };
   }
 
