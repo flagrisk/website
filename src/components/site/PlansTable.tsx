@@ -39,6 +39,12 @@ export function PlansTable() {
         </div>
       </div>
 
+      <p className="mt-3 text-center text-sm font-medium text-teal">
+        {annual
+          ? "You're saving two months with annual billing."
+          : "Pay annually and get two months free."}
+      </p>
+
       <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
         {TIERS.map((t) => {
           const highlighted = initialPlan ? t.id === initialPlan : t.hero;

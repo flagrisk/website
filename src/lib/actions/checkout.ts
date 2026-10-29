@@ -17,17 +17,19 @@ export async function startCheckout(
   email?: string,
 ): Promise<CheckoutInit> {
   const supabase = await createClient();
+  // getUser() hits gotrue for the FRESH account (the session cookie can be stale
+  // right after we add an email), so the email check below is accurate.
   const {
-    data: { session },
-  } = await supabase.auth.getSession();
-  if (!session?.user) {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) {
     return { ok: false, error: "Please log in first.", needsAuth: true };
   }
 
   // Paystack needs a customer email. Phone-only accounts have none, so collect
   // one for the receipt and save it to the account (confirmed, no email sent),
   // which is what paystack-init reads.
-  if (!session.user.email) {
+  if (!user.email) {
     const e = (email ?? "").trim();
     if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(e)) {
       return {
@@ -37,10 +39,10 @@ export async function startCheckout(
       };
     }
     const admin = createServiceClient();
-    const { error: upErr } = await admin.auth.admin.updateUserById(
-      session.user.id,
-      { email: e, email_confirm: true },
-    );
+    const { error: upErr } = await admin.auth.admin.updateUserById(user.id, {
+      email: e,
+      email_confirm: true,
+    });
     if (upErr) {
       return { ok: false, error: "Could not save your email. Try again." };
     }
@@ -48,6 +50,12 @@ export async function startCheckout(
 
   // Forward the user's JWT explicitly: paystack-init authenticates the caller,
   // and the server-side client doesn't always attach the session token on its own.
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+  if (!session) {
+    return { ok: false, error: "Please log in first.", needsAuth: true };
+  }
   const { data, error } = await supabase.functions.invoke("paystack-init", {
     body: { tier, billing_interval: cycle, country: "NG" },
     headers: { Authorization: `Bearer ${session.access_token}` },
