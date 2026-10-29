@@ -14,12 +14,12 @@ export function LoginForm({ next }: { next: string }) {
     <form action={formAction} className="space-y-4">
       <input type="hidden" name="next" value={next} />
       <Field
-        label="Email"
-        name="email"
-        type="email"
+        label="Phone number"
+        name="phone"
+        type="tel"
         required
-        autoComplete="email"
-        placeholder="you@example.com"
+        autoComplete="tel"
+        placeholder="080 1234 5678"
       />
       <Field
         label="Password"

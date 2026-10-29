@@ -11,7 +11,7 @@ export const instant = false;
 export default async function LoginPage({
   searchParams,
 }: {
-  searchParams: Promise<{ next?: string; check_email?: string; error?: string }>;
+  searchParams: Promise<{ next?: string }>;
 }) {
   const sp = await searchParams;
   const next = sp.next ?? "/dashboard";
@@ -19,7 +19,7 @@ export default async function LoginPage({
   return (
     <AuthShell
       title="Welcome back"
-      subtitle="Log in to your FlagRisk account."
+      subtitle="Log in with your phone number and password."
       footer={
         <>
           New to FlagRisk?{" "}
@@ -29,16 +29,6 @@ export default async function LoginPage({
         </>
       }
     >
-      {sp.check_email && (
-        <p className="mb-4 rounded-[10px] bg-teal/10 px-3.5 py-2.5 text-sm text-teal">
-          Check your email to confirm your account, then log in.
-        </p>
-      )}
-      {sp.error === "confirm" && (
-        <p className="mb-4 rounded-[10px] bg-red-50 px-3.5 py-2.5 text-sm text-red-600">
-          That confirmation link didn&apos;t work. Try logging in, or sign up again.
-        </p>
-      )}
       <LoginForm next={next} />
     </AuthShell>
   );

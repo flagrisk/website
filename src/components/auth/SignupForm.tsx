@@ -17,15 +17,16 @@ export function SignupForm({ refCode }: { refCode: string }) {
         label="Full name"
         name="full_name"
         autoComplete="name"
+        required
         placeholder="Your name"
       />
       <Field
-        label="Email"
-        name="email"
-        type="email"
+        label="Phone number"
+        name="phone"
+        type="tel"
         required
-        autoComplete="email"
-        placeholder="you@example.com"
+        autoComplete="tel"
+        placeholder="080 1234 5678"
       />
       <Field
         label="Password"
@@ -47,6 +48,9 @@ export function SignupForm({ refCode }: { refCode: string }) {
         </p>
       )}
       <SubmitButton>Create account</SubmitButton>
+      <p className="text-xs text-slate">
+        We&apos;ll text you a 6-digit code to confirm your number.
+      </p>
     </form>
   );
 }
