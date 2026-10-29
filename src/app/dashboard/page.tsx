@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, createServiceClient } from "@/lib/supabase/server";
 import { signOutAction } from "@/lib/actions/auth";
 import { formatNaira } from "@/lib/tiers";
 import { REFERRAL_REWARDS, MILESTONE_LABEL } from "@/lib/referrals";
@@ -99,6 +99,26 @@ export default async function DashboardPage() {
     currentTier.slice(1) +
     (currentTier === "basic" ? " (free)" : "");
   const displayName = profile?.display_name ?? user.user_metadata?.full_name ?? "";
+
+  // The member's WhatsApp invite name, the bot attributes "X introduced me" by
+  // channel_identities.share_name, so the invite must use that exact name.
+  // Read via the service client to avoid channel RLS; empty if they haven't set
+  // one up through the bot yet.
+  let shareName = "";
+  try {
+    const admin = createServiceClient();
+    const { data: ch } = await admin
+      .from("channel_identities")
+      .select("share_name")
+      .eq("profile_id", user.id)
+      .not("share_name", "is", null)
+      .order("share_name_used_at", { ascending: false, nullsFirst: false })
+      .limit(1)
+      .maybeSingle();
+    shareName = ch?.share_name ?? "";
+  } catch {
+    shareName = "";
+  }
 
   return (
     <main className="min-h-screen bg-mist">
@@ -201,7 +221,7 @@ export default async function DashboardPage() {
           </div>
 
           <ShareMessages
-            referrerName={displayName}
+            shareName={shareName}
             botNumber={process.env.NEXT_PUBLIC_WHATSAPP_BOT_NUMBER ?? ""}
           />
         </section>

@@ -28,10 +28,10 @@ function buildMessages(botLink: string) {
 }
 
 export function ShareMessages({
-  referrerName,
+  shareName,
   botNumber,
 }: {
-  referrerName: string;
+  shareName: string;
   botNumber: string;
 }) {
   const [copiedId, setCopiedId] = useState<string | null>(null);
@@ -49,8 +49,13 @@ export function ShareMessages({
     );
   }
 
-  // The friend sends this to the FlagRisk line; the bot attributes it by name.
-  const invite = `Start FlagRisk. ${referrerName || "a friend"} introduced me`;
+  // The friend sends this to the FlagRisk line. The bot credits the referrer by
+  // matching the name against their bot share_name, so we use that exact name.
+  // Without a share_name we send a plain "Start FlagRisk" so no one is credited
+  // by mistake; the person still lands in the safety menu.
+  const invite = shareName
+    ? `Start FlagRisk. ${shareName} introduced me`
+    : "Start FlagRisk";
   const botLink = `https://wa.me/${botNumber}?text=${encodeURIComponent(invite)}`;
   const messages = buildMessages(botLink);
 
