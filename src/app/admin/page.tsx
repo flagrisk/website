@@ -24,7 +24,7 @@ export default async function AdminPage() {
     db.from("referral_rewards").select("referrer_id, milestone, amount_naira"),
     db
       .from("payouts")
-      .select("id, user_id, amount_naira, status, created_at")
+      .select("id, user_id, amount_naira, status, failure_reason, created_at")
       .order("created_at", { ascending: false }),
   ]);
 
@@ -142,6 +142,11 @@ export default async function AdminPage() {
                       </td>
                       <td className="py-2.5">
                         <span className="text-slate">{p.status}</span>
+                        {p.status === "failed" && p.failure_reason && (
+                          <span className="block text-xs text-red-600">
+                            {p.failure_reason}
+                          </span>
+                        )}
                       </td>
                       <td className="py-2.5 text-slate">
                         {new Date(p.created_at).toLocaleDateString("en-NG")}
