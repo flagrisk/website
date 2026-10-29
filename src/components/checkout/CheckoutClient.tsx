@@ -46,15 +46,18 @@ export function CheckoutClient({
   tierName,
   cycle,
   priceLabel,
+  hasEmail,
 }: {
   tier: string;
   tierName: string;
   cycle: "monthly" | "annual";
   priceLabel: string;
+  hasEmail: boolean;
 }) {
   const router = useRouter();
   const [phase, setPhase] = useState<Phase>("idle");
   const [message, setMessage] = useState<string | null>(null);
+  const [email, setEmail] = useState("");
 
   useEffect(() => {
     loadPaystack().catch(() => {
@@ -91,7 +94,7 @@ export function CheckoutClient({
     setMessage(null);
     setPhase("starting");
 
-    const init = await startCheckout(tier, cycle);
+    const init = await startCheckout(tier, cycle, email);
     if (!init.ok) {
       if (init.needsAuth) {
         router.push(`/login?next=/checkout?tier=${tier}%26cycle=${cycle}`);
@@ -134,6 +137,20 @@ export function CheckoutClient({
 
   return (
     <div>
+      {!hasEmail && (
+        <label className="mb-4 block">
+          <span className="text-sm font-medium text-ink">
+            Email for your receipt
+          </span>
+          <input
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="you@example.com"
+            className="mt-1.5 w-full rounded-[10px] border border-line bg-white px-3.5 py-2.5 text-sm text-ink outline-none focus:border-night"
+          />
+        </label>
+      )}
       <button
         onClick={pay}
         disabled={busy}

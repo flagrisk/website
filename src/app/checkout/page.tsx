@@ -27,6 +27,7 @@ export default async function CheckoutPage({
   if (!user) {
     redirect(`/login?next=${encodeURIComponent(`/checkout?tier=${tierId}&cycle=${cycle}`)}`);
   }
+  const hasEmail = !!user.email;
 
   const amount = cycle === "annual" ? tier.monthly * 12 : tier.monthly;
   const priceLabel = formatNaira(amount);
@@ -64,6 +65,7 @@ export default async function CheckoutPage({
               tierName={tier.name}
               cycle={cycle}
               priceLabel={priceLabel}
+              hasEmail={hasEmail}
             />
           </div>
         </div>

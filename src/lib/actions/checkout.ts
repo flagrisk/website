@@ -1,10 +1,10 @@
 "use server";
 
-import { createClient } from "@/lib/supabase/server";
+import { createClient, createServiceClient } from "@/lib/supabase/server";
 
 export type CheckoutInit =
   | { ok: true; accessCode: string; reference: string; amount: number; currency: string }
-  | { ok: false; error: string; needsAuth?: boolean };
+  | { ok: false; error: string; needsAuth?: boolean; needsEmail?: boolean };
 
 // Start a subscription checkout by reusing the app's paystack-init Edge Function.
 // It authenticates via the caller's session (functions.invoke sends the JWT),
@@ -14,6 +14,7 @@ export type CheckoutInit =
 export async function startCheckout(
   tier: string,
   cycle: "monthly" | "annual",
+  email?: string,
 ): Promise<CheckoutInit> {
   const supabase = await createClient();
   const {
@@ -21,6 +22,28 @@ export async function startCheckout(
   } = await supabase.auth.getSession();
   if (!session?.user) {
     return { ok: false, error: "Please log in first.", needsAuth: true };
+  }
+
+  // Paystack needs a customer email. Phone-only accounts have none, so collect
+  // one for the receipt and save it to the account (confirmed, no email sent),
+  // which is what paystack-init reads.
+  if (!session.user.email) {
+    const e = (email ?? "").trim();
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(e)) {
+      return {
+        ok: false,
+        needsEmail: true,
+        error: "Enter an email for your receipt.",
+      };
+    }
+    const admin = createServiceClient();
+    const { error: upErr } = await admin.auth.admin.updateUserById(
+      session.user.id,
+      { email: e, email_confirm: true },
+    );
+    if (upErr) {
+      return { ok: false, error: "Could not save your email. Try again." };
+    }
   }
 
   // Forward the user's JWT explicitly: paystack-init authenticates the caller,
