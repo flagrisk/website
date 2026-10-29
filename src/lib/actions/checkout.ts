@@ -15,6 +15,7 @@ export async function startCheckout(
   tier: string,
   cycle: "monthly" | "annual",
   email?: string,
+  saveToAccount?: boolean,
 ): Promise<CheckoutInit> {
   const supabase = await createClient();
   // getUser() hits gotrue for the FRESH account (the session cookie can be stale
@@ -26,25 +27,32 @@ export async function startCheckout(
     return { ok: false, error: "Please log in first.", needsAuth: true };
   }
 
-  // Paystack needs a customer email. Phone-only accounts have none, so collect
-  // one for the receipt and save it to the account (confirmed, no email sent),
-  // which is what paystack-init reads.
+  // Phone is the identity; email is optional. Paystack still needs a customer
+  // email, so for a phone-only account we collect one. We attach it to the
+  // account ONLY if the person asked us to; otherwise it is used just for this
+  // transaction and the receipt, and passed to paystack-init in the body.
+  const entered = (email ?? "").trim();
+  let customerEmail = user.email ?? "";
+
   if (!user.email) {
-    const e = (email ?? "").trim();
-    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(e)) {
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(entered)) {
       return {
         ok: false,
         needsEmail: true,
         error: "Enter an email for your receipt.",
       };
     }
-    const admin = createServiceClient();
-    const { error: upErr } = await admin.auth.admin.updateUserById(user.id, {
-      email: e,
-      email_confirm: true,
-    });
-    if (upErr) {
-      return { ok: false, error: "Could not save your email. Try again." };
+    customerEmail = entered;
+
+    if (saveToAccount) {
+      const admin = createServiceClient();
+      const { error: upErr } = await admin.auth.admin.updateUserById(user.id, {
+        email: entered,
+        email_confirm: true,
+      });
+      if (upErr) {
+        return { ok: false, error: "Could not save your email. Try again." };
+      }
     }
   }
 
@@ -57,7 +65,9 @@ export async function startCheckout(
     return { ok: false, error: "Please log in first.", needsAuth: true };
   }
   const { data, error } = await supabase.functions.invoke("paystack-init", {
-    body: { tier, billing_interval: cycle, country: "NG" },
+    // email in the body covers the not-saved case; the updated paystack-init
+    // uses user.email first, then this.
+    body: { tier, billing_interval: cycle, country: "NG", email: customerEmail },
     headers: { Authorization: `Bearer ${session.access_token}` },
   });
 

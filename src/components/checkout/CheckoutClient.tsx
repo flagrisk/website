@@ -58,6 +58,7 @@ export function CheckoutClient({
   const [phase, setPhase] = useState<Phase>("idle");
   const [message, setMessage] = useState<string | null>(null);
   const [email, setEmail] = useState("");
+  const [saveEmail, setSaveEmail] = useState(false);
 
   useEffect(() => {
     loadPaystack().catch(() => {
@@ -94,7 +95,7 @@ export function CheckoutClient({
     setMessage(null);
     setPhase("starting");
 
-    const init = await startCheckout(tier, cycle, email);
+    const init = await startCheckout(tier, cycle, email, saveEmail);
     if (!init.ok) {
       if (init.needsAuth) {
         router.push(`/login?next=/checkout?tier=${tier}%26cycle=${cycle}`);
@@ -138,18 +139,32 @@ export function CheckoutClient({
   return (
     <div>
       {!hasEmail && (
-        <label className="mb-4 block">
-          <span className="text-sm font-medium text-ink">
-            Email for your receipt
-          </span>
-          <input
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder="you@example.com"
-            className="mt-1.5 w-full rounded-[10px] border border-line bg-white px-3.5 py-2.5 text-sm text-ink outline-none focus:border-night"
-          />
-        </label>
+        <div className="mb-4">
+          <label className="block">
+            <span className="text-sm font-medium text-ink">
+              Email for your receipt
+            </span>
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="you@example.com"
+              className="mt-1.5 w-full rounded-[10px] border border-line bg-white px-3.5 py-2.5 text-sm text-ink outline-none focus:border-night"
+            />
+          </label>
+          <label className="mt-2.5 flex items-start gap-2">
+            <input
+              type="checkbox"
+              checked={saveEmail}
+              onChange={(e) => setSaveEmail(e.target.checked)}
+              className="mt-0.5"
+            />
+            <span className="text-sm text-slate">
+              Save this email to my FlagRisk account for receipts and recovery.
+              Your phone number stays your login either way.
+            </span>
+          </label>
+        </div>
       )}
       <button
         onClick={pay}
