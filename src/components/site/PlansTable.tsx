@@ -86,7 +86,11 @@ export function PlansTable() {
 
               <div className="mt-7 pt-1">
                 <Link
-                  href={`/signup?plan=${t.id}&cycle=${annual ? "annual" : "monthly"}`}
+                  href={
+                    t.paid
+                      ? `/checkout?tier=${t.id}&cycle=${annual ? "annual" : "monthly"}`
+                      : `/signup?plan=${t.id}`
+                  }
                   className={["btn w-full", highlighted ? "btn-lime" : t.paid ? "btn-primary" : "btn-outline"].join(" ")}
                 >
                   {t.paid ? `Choose ${t.name}` : "Start free"}
