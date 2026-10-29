@@ -7,6 +7,8 @@ import { formatNaira } from "@/lib/tiers";
 import { REFERRAL_REWARDS, MILESTONE_LABEL } from "@/lib/referrals";
 import { CopyLink } from "@/components/dashboard/CopyLink";
 import { PayoutForm } from "@/components/dashboard/PayoutForm";
+import { PayoutAccountForm } from "@/components/dashboard/PayoutAccountForm";
+import { listBanks, type Bank } from "@/lib/paystack";
 
 export const metadata: Metadata = { title: "Dashboard" };
 
@@ -71,6 +73,15 @@ export default async function DashboardPage() {
   const siteUrl =
     process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
   const referralUrl = `${siteUrl}/signup?ref=${code ?? ""}`;
+
+  // Bank list for the payout-account form. Degrades to a code input if Paystack
+  // is unreachable or not yet configured.
+  let banks: Bank[] = [];
+  try {
+    banks = await listBanks();
+  } catch {
+    banks = [];
+  }
 
   const currentTier = (profile?.current_tier ?? "basic") as string;
   const isPaid = ["standard", "pro", "premium"].includes(currentTier);
@@ -178,6 +189,22 @@ export default async function DashboardPage() {
                 />
               ),
             )}
+          </div>
+        </section>
+
+        {/* Payout account */}
+        <section className="mt-6 rounded-[14px] border border-line bg-white p-6">
+          <h2 className="text-sm font-semibold uppercase tracking-wide text-slate">
+            Payout account
+          </h2>
+          <p className="mt-2 mb-4 text-sm text-ink">
+            Where we send your referral earnings when you withdraw.
+          </p>
+          <div className="max-w-[440px]">
+            <PayoutAccountForm
+              banks={banks}
+              current={recipient?.account_name ?? null}
+            />
           </div>
         </section>
 
