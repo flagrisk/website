@@ -8,6 +8,7 @@ import { REFERRAL_REWARDS, MILESTONE_LABEL } from "@/lib/referrals";
 import { CopyLink } from "@/components/dashboard/CopyLink";
 import { PayoutForm } from "@/components/dashboard/PayoutForm";
 import { PayoutAccountForm } from "@/components/dashboard/PayoutAccountForm";
+import { ShareMessages } from "@/components/dashboard/ShareMessages";
 import { listBanks, type Bank } from "@/lib/paystack";
 
 export const metadata: Metadata = { title: "Dashboard" };
@@ -198,6 +199,8 @@ export default async function DashboardPage() {
               ),
             )}
           </div>
+
+          <ShareMessages referralUrl={referralUrl} />
         </section>
 
         {/* Payout account */}
