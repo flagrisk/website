@@ -1,6 +1,7 @@
 // Next.js 16 Proxy (formerly Middleware). Refreshes the Supabase session on
-// every request and gates the private area (/dashboard). /admin is the console
-// SPA (public/console.html), which signs in on its own, so it is not gated here.
+// every request and gates the private area (/dashboard). The admin console is a
+// self-authenticating SPA served at a secret path (see next.config.ts), so it
+// is not gated here.
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
