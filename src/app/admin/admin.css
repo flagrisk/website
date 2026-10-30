@@ -1,0 +1,370 @@
+/* FlagRisk admin console styling, adopted from the comprehensive console.
+   Everything is scoped under .fr-console so it never touches the rest of the
+   site. Light and dark themes via .fr-console[data-theme="..."]. */
+
+.fr-console {
+  --paper: #fcfbf8;
+  --surface: #ffffff;
+  --surface-2: #fcfbf8;
+  --surface-3: #f4f1e8;
+  --ink: #13160f;
+  --ink-soft: #585d52;
+  --ink-faint: #8a8f82;
+  --line: #ece9df;
+  --line-2: #ddd9cc;
+  --green: #0e6a4f;
+  --green-deep: #0a4a38;
+  --lime: #b7db1f;
+  --amber: #e8973a;
+  --ember: #d9533f;
+  --blue: #dce9f2;
+  --pink: #f6d9de;
+  --peach: #fae0c8;
+  --lav: #e5def4;
+  --mint: #d9ecdf;
+  --sky: #e2eef0;
+  --brand-ink: #ffffff;
+  --danger: #d9533f;
+  --shadow: 0 1px 2px rgba(19, 22, 15, 0.04), 0 10px 26px -18px rgba(19, 22, 15, 0.18);
+  --r-card: 18px;
+  --r-btn: 6px;
+  --r-input: 8px;
+  --ease: cubic-bezier(0.2, 0.6, 0.32, 1);
+
+  min-height: 100vh;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: "General Sans", var(--font-sans), system-ui, sans-serif;
+  font-size: 14px;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+}
+
+.fr-console[data-theme="dark"] {
+  --paper: #10130d;
+  --surface: #171b12;
+  --surface-2: #1c2117;
+  --surface-3: #262c1f;
+  --ink: #f1f0e6;
+  --ink-soft: #a8ad9d;
+  --ink-faint: #787d6f;
+  --line: #272d1f;
+  --line-2: #363d2b;
+  --green: #3fa77f;
+  --green-deep: #2e8a66;
+  --blue: #22303a;
+  --pink: #3a2a2d;
+  --peach: #3a3022;
+  --lav: #2e2a3a;
+  --mint: #1f3329;
+  --sky: #22323a;
+}
+
+.fr-console .topbar {
+  height: 60px;
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  padding: 0 22px;
+  border-bottom: 1px solid var(--line);
+  background: var(--surface);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+.fr-console .wordmark {
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  font-size: 18px;
+  color: var(--ink);
+}
+.fr-console .tag {
+  font-size: 10.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-weight: 600;
+  color: var(--green);
+  border: 1px solid var(--green);
+  border-radius: 999px;
+  padding: 2px 9px;
+}
+.fr-console .spacer {
+  flex: 1;
+}
+.fr-console .who {
+  color: var(--ink-soft);
+  font-size: 13px;
+}
+.fr-console .btn-ghost {
+  background: transparent;
+  color: var(--ink-soft);
+  border: 1px solid var(--line-2);
+  border-radius: var(--r-btn);
+  padding: 8px 13px;
+  font-size: 13px;
+  font-weight: 500;
+  text-decoration: none;
+}
+.fr-console .btn-ghost:hover {
+  color: var(--ink);
+  border-color: var(--ink-faint);
+}
+
+.fr-console .app-shell {
+  display: grid;
+  grid-template-columns: 234px 1fr;
+  height: calc(100vh - 60px);
+}
+.fr-console .sidenav {
+  border-right: 1px solid var(--line);
+  background: var(--surface);
+  overflow-y: auto;
+  padding: 16px 13px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.fr-console .nav-label {
+  font-size: 10.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--ink-faint);
+  font-weight: 600;
+  padding: 8px 11px 7px;
+}
+.fr-console .navitem {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  text-align: left;
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--ink-soft);
+  border-radius: 11px;
+  padding: 10px 12px;
+  font-size: 14px;
+  font-weight: 500;
+  transition: background 0.13s var(--ease), color 0.13s var(--ease);
+}
+.fr-console .navitem:hover {
+  background: var(--surface-3);
+  color: var(--ink);
+}
+.fr-console .navitem.active {
+  background: rgba(14, 106, 79, 0.09);
+  color: var(--green-deep);
+  font-weight: 600;
+  box-shadow: inset 3px 0 0 var(--green);
+}
+.fr-console[data-theme="dark"] .navitem.active {
+  color: var(--green);
+  background: rgba(63, 167, 127, 0.12);
+}
+.fr-console .navitem svg {
+  flex: none;
+}
+.fr-console .navitem .nav-count {
+  margin-left: auto;
+  font-size: 11px;
+  font-weight: 700;
+  color: #fff;
+  background: var(--ember);
+  border-radius: 999px;
+  padding: 1px 8px;
+}
+.fr-console .navitem .nav-count.zero {
+  background: var(--surface-3);
+  color: var(--ink-faint);
+}
+
+.fr-console .main {
+  overflow: auto;
+  min-width: 0;
+  padding: 30px 34px 80px;
+}
+.fr-console .panel {
+  max-width: 1180px;
+}
+.fr-console .panel-head {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+.fr-console .panel-head h1 {
+  margin: 0;
+  font-size: 27px;
+  font-weight: 600;
+  letter-spacing: -0.035em;
+}
+.fr-console .panel-head .sub {
+  color: var(--ink-soft);
+  font-size: 13px;
+}
+
+.fr-console .stat-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(184px, 1fr));
+  gap: 14px;
+  margin-bottom: 26px;
+}
+.fr-console .stat-card {
+  border: 1px solid rgba(19, 22, 15, 0.05);
+  border-radius: var(--r-card);
+  padding: 17px 19px;
+}
+.fr-console .stat-card .n {
+  font-size: 31px;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  color: var(--ink);
+}
+.fr-console .stat-card .l {
+  color: var(--green-deep);
+  font-size: 12px;
+  font-weight: 600;
+  margin-top: 3px;
+}
+.fr-console[data-theme="dark"] .stat-card .l {
+  color: var(--ink-soft);
+}
+.fr-console .stat-card.p0 { background: var(--blue); }
+.fr-console .stat-card.p1 { background: var(--mint); }
+.fr-console .stat-card.p2 { background: var(--peach); }
+.fr-console .stat-card.p3 { background: var(--lav); }
+.fr-console .stat-card.p4 { background: var(--sky); }
+.fr-console .stat-card.p5 { background: var(--pink); }
+
+.fr-console .data-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r-card);
+  overflow: hidden;
+  box-shadow: var(--shadow);
+}
+.fr-console .data-table th {
+  text-align: left;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--ink-faint);
+  font-weight: 600;
+  padding: 13px 16px;
+  border-bottom: 1px solid var(--line);
+  background: var(--surface-2);
+}
+.fr-console .data-table td {
+  padding: 13px 16px;
+  border-bottom: 1px solid var(--line);
+  font-size: 13px;
+}
+.fr-console .data-table tr:last-child td {
+  border-bottom: none;
+}
+.fr-console .data-table tbody tr:hover td {
+  background: var(--surface-3);
+}
+.fr-console .data-table .num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.fr-console .card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r-card);
+  padding: 15px 18px;
+  box-shadow: var(--shadow);
+}
+.fr-console .card h3 {
+  margin: 0 0 10px;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--ink-faint);
+  font-weight: 600;
+}
+
+.fr-console .btn {
+  border: 1px solid var(--line-2);
+  background: var(--surface-2);
+  color: var(--ink);
+  border-radius: var(--r-btn);
+  padding: 10px 16px;
+  font-size: 13px;
+  font-weight: 600;
+}
+.fr-console .btn:hover {
+  border-color: var(--ink-faint);
+}
+.fr-console .btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.fr-console .btn.primary {
+  background: var(--green);
+  border-color: var(--green);
+  color: var(--brand-ink);
+}
+.fr-console .btn.primary:hover {
+  background: var(--green-deep);
+  border-color: var(--green-deep);
+}
+.fr-console .btn.small {
+  padding: 5px 11px;
+  font-size: 12px;
+}
+
+.fr-console .pill {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 6px;
+  white-space: nowrap;
+}
+.fr-console .pill.ok { background: rgba(14, 106, 79, 0.12); color: var(--green); }
+.fr-console .pill.bad { background: rgba(217, 83, 63, 0.13); color: var(--ember); }
+.fr-console .pill.muted { background: var(--surface-3); color: var(--ink-faint); }
+.fr-console .pill.warn { background: rgba(232, 151, 58, 0.15); color: var(--amber); }
+
+.fr-console .search {
+  width: 100%;
+  max-width: 320px;
+  border: 1px solid var(--line-2);
+  background: var(--surface);
+  color: var(--ink);
+  border-radius: var(--r-input);
+  padding: 9px 13px;
+  font-size: 13px;
+  margin-bottom: 16px;
+}
+.fr-console .search:focus {
+  outline: none;
+  border-color: var(--green);
+}
+.fr-console .empty {
+  padding: 56px 24px;
+  text-align: center;
+  color: var(--ink-soft);
+}
+.fr-console .muted-text {
+  color: var(--ink-soft);
+  font-size: 13px;
+}
+
+@media (max-width: 860px) {
+  .fr-console .app-shell {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto 1fr;
+    height: auto;
+  }
+  .fr-console .sidenav {
+    flex-direction: row;
+    overflow-x: auto;
+  }
+  .fr-console .nav-label { display: none; }
+}
