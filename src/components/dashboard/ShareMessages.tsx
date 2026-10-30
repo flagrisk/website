@@ -10,19 +10,19 @@ import { useState } from "react";
 function buildMessages(botLink: string) {
   return [
     {
-      id: "friend",
+      id: "spotcheck",
       label: "To a friend",
-      text: `I use FlagRisk to stay safe with the people I trust, right here on WhatsApp. You keep a small circle of family or friends, and if anyone ever feels unsafe or needs help, the others know at once. No app to download. To try it, open the FlagRisk line here and send the message that comes up: ${botLink}`,
+      text: `You can use FlagRisk right here on WhatsApp to check how safe a place is before you head there, and see safety concerns people have reported nearby. If anything ever feels off, you can raise an alarm or tell the people you trust. Open the FlagRisk line and send the message that comes up: ${botLink}`,
     },
     {
-      id: "short",
-      label: "Short and simple",
-      text: `FlagRisk lets you and a few people you trust look out for each other on WhatsApp, raise an alarm, share a trip home, or flag a safety concern nearby. I thought you'd find it useful. Open the FlagRisk line and send the message that comes up: ${botLink}`,
+      id: "roadtrip",
+      label: "For a road trip",
+      text: `If you're travelling or heading out on a road trip, FlagRisk is worth having on WhatsApp. You can check how safe the towns and stops along your route are, see safety concerns people have reported there, and reach your people fast if anything happens on the road. Open the FlagRisk line and send the message that comes up: ${botLink}`,
     },
     {
       id: "group",
       label: "To a group",
-      text: `Hi everyone. Sharing FlagRisk, a Nigerian safety service we can use right here on WhatsApp to look out for each other. You keep a small circle of people you trust, and if anyone feels unsafe or needs help, the rest know. Open the FlagRisk line and send the message that comes up: ${botLink}`,
+      text: `Sharing FlagRisk, something we can all use right here on WhatsApp. Check how safe a place is before you go, see safety concerns reported nearby, and look out for each other if anyone ever needs help. Worth having before you need it. Open the FlagRisk line and send the message that comes up: ${botLink}`,
     },
   ];
 }
