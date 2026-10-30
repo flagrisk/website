@@ -1,5 +1,6 @@
 // Next.js 16 Proxy (formerly Middleware). Refreshes the Supabase session on
-// every request and gates the private areas (/dashboard, /admin).
+// every request and gates the private area (/dashboard). /admin is the console
+// SPA (public/console.html), which signs in on its own, so it is not gated here.
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
@@ -33,7 +34,7 @@ export async function proxy(request: NextRequest) {
   } = await supabase.auth.getUser();
 
   const path = request.nextUrl.pathname;
-  const isPrivate = path.startsWith("/dashboard") || path.startsWith("/admin");
+  const isPrivate = path.startsWith("/dashboard");
 
   if (!user && isPrivate) {
     const url = request.nextUrl.clone();

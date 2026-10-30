@@ -333,6 +333,8 @@
     <nav class="sidenav" id="sidenav"></nav>
     <div class="main">
       <section class="section pad hidden" id="sec-overview"></section>
+      <section class="section pad hidden" id="sec-referrals"></section>
+      <section class="section pad hidden" id="sec-payouts"></section>
       <section class="section pad hidden" id="sec-analytics"></section>
       <section class="section pad hidden" id="sec-incidents"></section>
       <section class="section mod hidden" id="sec-moderation">
@@ -394,6 +396,7 @@ let catMap = {}, charts = {}, anaDays = 30, billDays = 90, roleOpts = [];
 let billCur = "", CURRENCIES = [];
 let searchTimer = null, paySearch = "", payStatus = "";
 let CAPS = null;
+let WEB_ADMIN = false;
 const CONSOLE_ROLES = ["owner", "analyst", "moderator", "responder", "finance", "compliance", "support", "viewer"];
 let peopleSort = "recent", peopleRole = "", peopleTier = "", peopleVerified = "", peopleTracking = "";
 const TIERS = [{ v: "basic", n: "Basic" }, { v: "standard", n: "Standard" }, { v: "pro", n: "Pro" }, { v: "premium", n: "Premium" }];
@@ -401,6 +404,8 @@ const TIERS = [{ v: "basic", n: "Basic" }, { v: "standard", n: "Standard" }, { v
 function ic(p) { return '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' + p + '</svg>'; }
 const ICONS = {
   overview: ic('<rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/>'),
+  referrals: ic('<circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.6" y1="10.5" x2="15.4" y2="6.5"/><line x1="8.6" y1="13.5" x2="15.4" y2="17.5"/>'),
+  payouts: ic('<rect x="2" y="5" width="20" height="14" rx="2"/><circle cx="12" cy="12" r="3"/><path d="M6 5v0M18 19v0"/>'),
   analytics: ic('<path d="M3 3v18h18"/><rect x="7" y="10" width="3" height="7" rx="0.5"/><rect x="12" y="6" width="3" height="11" rx="0.5"/><rect x="17" y="13" width="3" height="4" rx="0.5"/>'),
   safety: ic('<circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="4"/><path d="m4.9 4.9 4.2 4.2M14.9 14.9l4.2 4.2M14.9 9.1l4.2-4.2M4.9 19.1l4.2-4.2"/>'),
   billing: ic('<rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/>'),
@@ -422,6 +427,8 @@ const ICONS = {
 
 const SECTIONS = [
   { key: "overview",      label: "Overview",        load: loadOverview },
+  { key: "referrals",     label: "Referrals",       load: loadReferrals },
+  { key: "payouts",       label: "Payouts",         load: loadPayouts },
   { key: "analytics",     label: "Analytics",       load: loadAnalytics },
   { key: "incidents",     label: "Incidents",       load: loadIncidents },
   { key: "moderation",    label: "Moderation",      load: loadQueue },
@@ -493,6 +500,13 @@ function capsSections() {
   if (CAPS && CAPS.is_app_admin && base.indexOf("testing") < 0) base.push("testing");
   if (CAPS && CAPS.is_app_admin && base.indexOf("testingext") < 0) base.push("testingext");
   if (CAPS && CAPS.is_app_admin && base.indexOf("signups") < 0) base.push("signups");
+  // Referrals & Payouts are the website growth engine, gated by web_is_admin
+  // (enforced server-side by admin_referral_console / admin_payout_console and
+  // the /api/payouts routes). This is presentation only.
+  if (WEB_ADMIN) {
+    if (base.indexOf("referrals") < 0) base.splice(1, 0, "referrals");
+    if (base.indexOf("payouts") < 0) base.splice(2, 0, "payouts");
+  }
   return base;
 }
 function wireSearch() {
@@ -564,6 +578,7 @@ async function enterApp(session) {
   $("whoami").textContent = session.user.email || session.user.id;
   try { const { data } = await supabase.rpc("admin_capabilities"); CAPS = data || null; } catch (e) { CAPS = null; }
   isAdmin = !!(CAPS && CAPS.is_app_admin);
+  try { const { data } = await supabase.rpc("web_is_admin"); WEB_ADMIN = !!data; } catch (e) { WEB_ADMIN = false; }
   try { const { data } = await supabase.rpc("admin_categories"); catMap = {}; (data || []).forEach((c) => { catMap[c.id] = c.display_name; }); } catch (e) {}
   buildNav();
   wireSearch();
@@ -775,6 +790,87 @@ async function drawThreatMap() {
     pts.push([i.lat, i.lng]);
   });
   if (pts.length) { try { mapObj.fitBounds(pts, { padding: [40, 40], maxZoom: 13 }); } catch (e) {} }
+}
+
+// ============================================================
+//  REFERRALS  (website growth engine — web_is_admin gated)
+// ============================================================
+function naira(n) { return "₦" + Number(n || 0).toLocaleString("en-NG"); }
+async function apiPost(path, body) {
+  const { data: { session } } = await supabase.auth.getSession();
+  const token = session && session.access_token;
+  const res = await fetch(path, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "Authorization": "Bearer " + token },
+    body: JSON.stringify(body || {}),
+  });
+  let json = null; try { json = await res.json(); } catch (e) {}
+  if (!res.ok) throw new Error((json && (json.error || json.message)) || ("HTTP " + res.status));
+  return json;
+}
+async function loadReferrals() {
+  const el = $("sec-referrals");
+  el.innerHTML = '<div class="panel-head"><h1>Referrals</h1><span class="sub">Who is bringing people in, and what they have earned</span></div><div class="spin">Loading...</div>';
+  const { data, error } = await supabase.rpc("admin_referral_console");
+  if (error) { el.innerHTML = '<div class="panel-head"><h1>Referrals</h1></div>' + adminErr(error); return; }
+  const d = data || {};
+  const cards = [
+    statCard(Number(d.referred || 0).toLocaleString(), "People referred", 0),
+    statCard(naira(d.earned), "Earned (all time)", 1),
+    statCard(naira(d.paid_out), "Paid out", 2),
+    statCard(naira(d.pending_sum) + " (" + (d.pending_count || 0) + ")", "Pending payout", 3),
+  ].join("");
+  const top = (d.top_referrers || []);
+  const topHtml = top.length
+    ? '<div class="card" style="margin-bottom:18px;"><h3>Top referrers</h3><table class="data-table" style="border:none;box-shadow:none;"><thead><tr><th>Member</th><th class="num">Earned</th></tr></thead><tbody>' +
+      top.map((t) => '<tr><td>' + esc(t.name) + '</td><td class="num">' + naira(t.amount) + '</td></tr>').join("") + '</tbody></table></div>'
+    : '';
+  const members = (d.members || []);
+  const memHtml = '<div class="card" style="margin-bottom:18px;"><h3>Referrers</h3>' + (members.length
+    ? '<table class="data-table" style="border:none;box-shadow:none;"><thead><tr><th>Member</th><th>Phone</th><th>Tier</th><th class="num">Referred</th><th class="num">Earned</th><th>Joined</th></tr></thead><tbody>' +
+      members.map((m) => '<tr><td>' + esc(m.name || "—") + '</td><td>' + esc(m.phone || "—") + '</td><td style="text-transform:capitalize;">' + esc(m.tier) + '</td><td class="num">' + (m.referred || 0) + '</td><td class="num">' + naira(m.earned) + '</td><td>' + (m.joined ? timeAgo(m.joined) : "—") + '</td></tr>').join("") + '</tbody></table>'
+    : '<div style="color:var(--ink-soft);font-size:13px;">No referrers yet.</div>') + '</div>';
+  const refs = (d.referrals || []);
+  const refHtml = '<div class="card"><h3>Referral activity</h3>' + (refs.length
+    ? '<table class="data-table" style="border:none;box-shadow:none;"><thead><tr><th>Referrer</th><th>Referred</th><th>Milestones</th><th>When</th></tr></thead><tbody>' +
+      refs.map((r) => '<tr><td>' + esc(r.referrer) + '</td><td>' + esc(r.referred) + '</td><td>' + (Array.isArray(r.milestones) && r.milestones.length ? r.milestones.map((m) => '<span class="pill info" style="margin-right:4px;">' + esc(m) + '</span>').join("") : '<span class="pill mut">none</span>') + '</td><td>' + (r.created_at ? timeAgo(r.created_at) : "—") + '</td></tr>').join("") + '</tbody></table>'
+    : '<div style="color:var(--ink-soft);font-size:13px;">No referrals recorded yet.</div>') + '</div>';
+  el.innerHTML = '<div class="panel-head"><h1>Referrals</h1><span class="sub">Who is bringing people in, and what they have earned</span></div>' +
+    '<div class="stat-grid" style="margin-bottom:18px;">' + cards + '</div>' + topHtml + memHtml + refHtml;
+}
+
+// ============================================================
+//  PAYOUTS  (Paystack transfers — processed server-side via /api/payouts)
+// ============================================================
+async function loadPayouts() {
+  const el = $("sec-payouts");
+  el.innerHTML = '<div class="panel-head"><h1>Payouts</h1><span class="sub">Referral earnings paid to members via Paystack</span></div><div class="spin">Loading...</div>';
+  const { data, error } = await supabase.rpc("admin_payout_console");
+  if (error) { el.innerHTML = '<div class="panel-head"><h1>Payouts</h1></div>' + adminErr(error); return; }
+  const payouts = (data && data.payouts) || [];
+  const pending = payouts.filter((p) => p.status === "pending").length;
+  const head = '<div class="panel-head"><h1>Payouts</h1><span class="sub">Referral earnings paid to members via Paystack</span><span class="grow"></span>' +
+    '<button class="btn primary" id="btnRunAll"' + (pending ? '' : ' disabled') + '>Run all pending' + (pending ? ' (' + pending + ')' : '') + '</button>' +
+    '<button class="btn" id="btnReconcile">Reconcile processing</button></div>';
+  const rows = payouts.length
+    ? payouts.map((p) => {
+        const pillCls = p.status === "paid" ? "ok" : (p.status === "failed" ? "bad" : (p.status === "processing" ? "info" : "mut"));
+        let action = "";
+        if (p.status === "pending") action = '<button class="btn" data-run="' + esc(p.id) + '">Pay now</button>';
+        else if (p.status === "failed") action = '<button class="btn" data-retry="' + esc(p.id) + '">Retry</button>';
+        return '<tr><td>' + esc(p.member) + '</td><td class="num">' + naira(p.amount_naira) + '</td><td><span class="pill ' + pillCls + '">' + esc(p.status) + '</span></td><td style="color:var(--ink-soft);font-size:12px;">' + esc(p.failure_reason || "") + '</td><td>' + (p.created_at ? timeAgo(p.created_at) : "") + '</td><td>' + action + '</td></tr>';
+      }).join("")
+    : '<tr><td colspan="6" style="color:var(--ink-soft);">No payout requests yet.</td></tr>';
+  el.innerHTML = head + '<table class="data-table"><thead><tr><th>Member</th><th class="num">Amount</th><th>Status</th><th>Note</th><th>Requested</th><th></th></tr></thead><tbody>' + rows + '</tbody></table>';
+  const runAll = $("btnRunAll"); if (runAll) runAll.onclick = () => payoutAction("/api/payouts/run", {}, "Running all pending payouts...");
+  const rec = $("btnReconcile"); if (rec) rec.onclick = () => payoutAction("/api/payouts/reconcile", {}, "Reconciling...");
+  el.querySelectorAll("[data-run]").forEach((b) => b.onclick = () => payoutAction("/api/payouts/run", { payout_id: b.getAttribute("data-run") }, "Paying out..."));
+  el.querySelectorAll("[data-retry]").forEach((b) => b.onclick = () => payoutAction("/api/payouts/retry", { payout_id: b.getAttribute("data-retry") }, "Retrying payout..."));
+}
+async function payoutAction(path, body, msg) {
+  toast(msg);
+  try { await apiPost(path, body); toast("Done"); } catch (e) { toast("Failed: " + e.message); }
+  loadPayouts();
 }
 
 // ============================================================

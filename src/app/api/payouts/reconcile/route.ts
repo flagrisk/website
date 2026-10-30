@@ -1,12 +1,12 @@
-import { NextResponse } from "next/server";
-import { requireAdmin } from "@/lib/admin";
+import { NextResponse, type NextRequest } from "next/server";
+import { requireAdminFromRequest } from "@/lib/admin";
 import { createServiceClient } from "@/lib/supabase/server";
 import { fetchTransfer, mapTransferStatus } from "@/lib/paystack";
 
 // Re-check every payout still "processing" against Paystack and settle it.
 // Useful when a transfer came back pending, or if no webhook is configured.
-export async function POST() {
-  const admin = await requireAdmin();
+export async function POST(request: NextRequest) {
+  const admin = await requireAdminFromRequest(request);
   if (!admin) {
     return NextResponse.json({ error: "forbidden" }, { status: 403 });
   }

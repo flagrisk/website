@@ -1,5 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { requireAdmin } from "@/lib/admin";
+import { requireAdminFromRequest } from "@/lib/admin";
 import { createServiceClient } from "@/lib/supabase/server";
 import { initiateTransfer, mapTransferStatus } from "@/lib/paystack";
 
@@ -7,7 +7,7 @@ import { initiateTransfer, mapTransferStatus } from "@/lib/paystack";
 // given pending payout (or all pending ones), then records the outcome.
 // POST body: { payout_id?: string }  — omit to process every pending payout.
 export async function POST(request: NextRequest) {
-  const admin = await requireAdmin();
+  const admin = await requireAdminFromRequest(request);
   if (!admin) {
     return NextResponse.json({ error: "forbidden" }, { status: 403 });
   }

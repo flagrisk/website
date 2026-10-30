@@ -1,12 +1,12 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { requireAdmin } from "@/lib/admin";
+import { requireAdminFromRequest } from "@/lib/admin";
 import { createServiceClient } from "@/lib/supabase/server";
 import { initiateTransfer, mapTransferStatus } from "@/lib/paystack";
 
 // Retry one failed payout as a fresh Paystack transfer. Admin-only.
 // POST body: { payout_id: string }
 export async function POST(request: NextRequest) {
-  const admin = await requireAdmin();
+  const admin = await requireAdminFromRequest(request);
   if (!admin) {
     return NextResponse.json({ error: "forbidden" }, { status: 403 });
   }
