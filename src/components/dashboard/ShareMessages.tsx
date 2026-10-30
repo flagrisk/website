@@ -56,7 +56,9 @@ export function ShareMessages({
   const invite = shareName
     ? `Start FlagRisk. ${shareName} introduced me`
     : "Start FlagRisk";
-  const botLink = `https://wa.me/${botNumber}?text=${encodeURIComponent(invite)}`;
+  // wa.me wants digits only, no "+".
+  const digits = botNumber.replace(/[^0-9]/g, "");
+  const botLink = `https://wa.me/${digits}?text=${encodeURIComponent(invite)}`;
   const messages = buildMessages(botLink);
 
   async function copy(id: string, text: string) {
