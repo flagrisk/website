@@ -336,6 +336,7 @@
       <section class="section pad hidden" id="sec-overview"></section>
       <section class="section pad hidden" id="sec-referrals"></section>
       <section class="section pad hidden" id="sec-payouts"></section>
+      <section class="section pad hidden" id="sec-whatsapp"></section>
       <section class="section pad hidden" id="sec-analytics"></section>
       <section class="section pad hidden" id="sec-incidents"></section>
       <section class="section mod hidden" id="sec-moderation">
@@ -407,6 +408,7 @@ const ICONS = {
   overview: ic('<rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/>'),
   referrals: ic('<circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.6" y1="10.5" x2="15.4" y2="6.5"/><line x1="8.6" y1="13.5" x2="15.4" y2="17.5"/>'),
   payouts: ic('<rect x="2" y="5" width="20" height="14" rx="2"/><circle cx="12" cy="12" r="3"/><path d="M6 5v0M18 19v0"/>'),
+  whatsapp: ic('<path d="M21 11.5a8.5 8.5 0 0 1-12.5 7.5L3 20l1.1-5.4A8.5 8.5 0 1 1 21 11.5z"/>'),
   analytics: ic('<path d="M3 3v18h18"/><rect x="7" y="10" width="3" height="7" rx="0.5"/><rect x="12" y="6" width="3" height="11" rx="0.5"/><rect x="17" y="13" width="3" height="4" rx="0.5"/>'),
   safety: ic('<circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="4"/><path d="m4.9 4.9 4.2 4.2M14.9 14.9l4.2 4.2M14.9 9.1l4.2-4.2M4.9 19.1l4.2-4.2"/>'),
   billing: ic('<rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/>'),
@@ -430,6 +432,7 @@ const SECTIONS = [
   { key: "overview",      label: "Overview",        load: loadOverview },
   { key: "referrals",     label: "Referrals",       load: loadReferrals },
   { key: "payouts",       label: "Payouts",         load: loadPayouts },
+  { key: "whatsapp",      label: "WhatsApp",        load: loadWhatsApp },
   { key: "analytics",     label: "Analytics",       load: loadAnalytics },
   { key: "incidents",     label: "Incidents",       load: loadIncidents },
   { key: "moderation",    label: "Moderation",      load: loadQueue },
@@ -507,6 +510,7 @@ function capsSections() {
   if (WEB_ADMIN) {
     if (base.indexOf("referrals") < 0) base.splice(1, 0, "referrals");
     if (base.indexOf("payouts") < 0) base.splice(2, 0, "payouts");
+    if (base.indexOf("whatsapp") < 0) base.splice(3, 0, "whatsapp");
   }
   return base;
 }
@@ -872,6 +876,53 @@ async function payoutAction(path, body, msg) {
   toast(msg);
   try { await apiPost(path, body); toast("Done"); } catch (e) { toast("Failed: " + e.message); }
   loadPayouts();
+}
+
+// ============================================================
+//  WHATSAPP  (viral motion — read-only, web_is_admin gated)
+// ============================================================
+// Source of truth for this invite copy is the dashboard component
+// src/components/dashboard/ShareMessages.tsx. Kept here read-only so admins can
+// see exactly what members send. If the copy changes there, update it here too.
+const WA_INVITE = "Start FlagRisk. {name} introduced me";
+const WA_MESSAGES = [
+  { label: "To a friend", text: "You can use FlagRisk right here on WhatsApp to check how safe a place is before you head there, and see safety concerns people have reported nearby. If anything ever feels off, you can raise an alarm or tell the people you trust. Open the FlagRisk line and send the message that comes up: {link}" },
+  { label: "For a road trip", text: "If you're travelling or heading out on a road trip, FlagRisk is worth having on WhatsApp. You can check how safe the towns and stops along your route are, see safety concerns people have reported there, and reach your people fast if anything happens on the road. Open the FlagRisk line and send the message that comes up: {link}" },
+  { label: "To a group", text: "Sharing FlagRisk, something we can all use right here on WhatsApp. Check how safe a place is before you go, see safety concerns reported nearby, and look out for each other if anyone ever needs help. Worth having before you need it. Open the FlagRisk line and send the message that comes up: {link}" },
+];
+async function loadWhatsApp() {
+  const el = $("sec-whatsapp");
+  el.innerHTML = '<div class="panel-head"><h1>WhatsApp</h1><span class="sub">The viral motion on the FlagRisk line</span></div><div class="spin">Loading...</div>';
+  const { data, error } = await supabase.rpc("admin_whatsapp_console");
+  if (error) { el.innerHTML = '<div class="panel-head"><h1>WhatsApp</h1></div>' + adminErr(error); return; }
+  const d = data || {};
+  const cards = [
+    statCard(Number(d.identities || 0).toLocaleString(), "WhatsApp contacts", 0),
+    statCard(Number(d.linked || 0).toLocaleString(), "Linked to accounts", 1),
+    statCard(Number(d.sharers || 0).toLocaleString(), "Members sharing", 2),
+    statCard(Number(d.names_used || 0).toLocaleString(), "Invites credited", 3),
+    statCard(Number(d.introductions || 0).toLocaleString(), "Introductions", 4),
+    statCard(Number(d.converted || 0).toLocaleString(), "Converted to referral", 5),
+  ].join("");
+
+  const sharers = (d.top_sharers || []);
+  const sharersHtml = '<div class="card" style="margin-bottom:18px;"><h3>Top sharers on WhatsApp</h3>' + (sharers.length
+    ? '<table class="data-table" style="border:none;box-shadow:none;"><thead><tr><th>Member</th><th>Phone</th><th>Account</th><th class="num">Introduced</th></tr></thead><tbody>' +
+      sharers.map((s) => '<tr><td>' + esc(s.name) + '</td><td>' + esc(s.phone || "—") + '</td><td>' + (s.linked ? '<span class="pill ok">linked</span>' : '<span class="pill mut">guest</span>') + '</td><td class="num">' + (s.introduced || 0) + '</td></tr>').join("") + '</tbody></table>'
+    : '<div style="color:var(--ink-soft);font-size:13px;">No one has brought anyone in through WhatsApp yet.</div>') + '</div>';
+
+  const intros = (d.introductions_list || []);
+  const introsHtml = '<div class="card" style="margin-bottom:18px;"><h3>Introductions</h3>' + (intros.length
+    ? '<table class="data-table" style="border:none;box-shadow:none;"><thead><tr><th>Introduced by</th><th>New person</th><th>Phone</th><th>Account</th><th>Referral</th></tr></thead><tbody>' +
+      intros.map((r) => '<tr><td>' + esc(r.referrer) + '</td><td>' + esc(r.referred) + '</td><td>' + esc(r.phone || "—") + '</td><td>' + (r.linked ? '<span class="pill ok">linked</span>' : '<span class="pill mut">pending</span>') + '</td><td>' + (r.converted ? '<span class="pill ok">credited</span>' : '<span class="pill mut">not yet</span>') + '</td></tr>').join("") + '</tbody></table>'
+    : '<div style="color:var(--ink-soft);font-size:13px;">No introductions recorded yet.</div>') + '</div>';
+
+  const inviteHtml = '<div class="card"><h3>Invite copy members send</h3>' +
+    '<p style="color:var(--ink-soft);font-size:13px;margin:0 0 12px;">Read-only. Members copy these from their dashboard; the link opens the FlagRisk line with this sentence pre-typed: <code style="background:var(--surface-3);padding:2px 6px;border-radius:5px;">' + esc(WA_INVITE) + '</code></p>' +
+    WA_MESSAGES.map((m) => '<div style="border:1px solid var(--line);border-radius:10px;padding:12px 14px;margin-bottom:10px;"><div style="font-size:11px;text-transform:uppercase;letter-spacing:0.06em;color:var(--ink-faint);font-weight:600;margin-bottom:6px;">' + esc(m.label) + '</div><div style="font-size:13px;line-height:1.55;color:var(--ink);white-space:pre-wrap;">' + esc(m.text) + '</div></div>').join("") + '</div>';
+
+  el.innerHTML = '<div class="panel-head"><h1>WhatsApp</h1><span class="sub">The viral motion on the FlagRisk line</span></div>' +
+    '<div class="stat-grid" style="margin-bottom:18px;">' + cards + '</div>' + sharersHtml + introsHtml + inviteHtml;
 }
 
 // ============================================================
