@@ -2,9 +2,17 @@ import type { NextConfig } from "next";
 
 // Secret path the admin console is served at. Set ADMIN_CONSOLE_PATH in Vercel
 // to a long random slug; the "admin" fallback is only for local development.
-const ADMIN_CONSOLE_PATH = (process.env.ADMIN_CONSOLE_PATH || "admin").replace(
-  /^\/+|\/+$/g,
-  "",
+// Trim whitespace (a pasted value often carries a trailing space/newline) and
+// strip any leading/trailing slashes so the rewrite source matches cleanly.
+const ADMIN_CONSOLE_PATH = (process.env.ADMIN_CONSOLE_PATH || "admin")
+  .trim()
+  .replace(/^\/+|\/+$/g, "")
+  .trim();
+
+// Shows up in the Vercel build log without revealing the slug, so a stray
+// character (wrong length) is easy to spot.
+console.log(
+  `[next.config] admin console path resolved (length ${ADMIN_CONSOLE_PATH.length})`,
 );
 
 const nextConfig: NextConfig = {
