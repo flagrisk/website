@@ -169,3 +169,60 @@ h4 {
   width: 100%;
   border-radius: 26px;
 }
+
+/* =========================================================================
+   User dashboard: FlagRisk admin-console design system (warm paper + olive
+   green, General Sans, 18px cards, square buttons, stat tiles, pills).
+   Everything is scoped under .dash so it never touches the marketing site.
+   ========================================================================= */
+.dash {
+  --d-paper:#FCFBF8; --d-surface:#FFFFFF; --d-surface-2:#FCFBF8; --d-surface-3:#F4F1E8;
+  --d-ink:#13160F; --d-ink-soft:#585D52; --d-ink-faint:#8A8F82;
+  --d-line:#ECE9DF; --d-line-2:#DDD9CC;
+  --d-green:#0E6A4F; --d-green-deep:#0A4A38; --d-lime:#B7DB1F; --d-amber:#E8973A; --d-ember:#D9533F;
+  --d-shadow:0 1px 2px rgba(19,22,15,.04), 0 10px 26px -18px rgba(19,22,15,.18);
+  --d-rcard:18px; --d-rbtn:4px; --d-rinput:8px;
+  min-height:100vh; background:var(--d-paper); color:var(--d-ink);
+  font-family:"General Sans", var(--font-sans), system-ui, sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  .dash {
+    --d-paper:#10130D; --d-surface:#171B12; --d-surface-2:#1C2117; --d-surface-3:#262C1F;
+    --d-ink:#F1F0E6; --d-ink-soft:#A8AD9D; --d-ink-faint:#787D6F;
+    --d-line:#272D1F; --d-line-2:#363D2B; --d-green:#3FA77F; --d-green-deep:#2E8A66;
+  }
+}
+.dash .d-topbar { border-bottom:1px solid var(--d-line); background:var(--d-surface); position:sticky; top:0; z-index:10; }
+.dash .d-word { font-weight:800; letter-spacing:-.03em; font-size:18px; color:var(--d-ink); }
+.dash .d-h1 { font-size:26px; font-weight:700; letter-spacing:-.03em; color:var(--d-ink); }
+.dash .d-sub { color:var(--d-ink-soft); font-size:14px; margin-top:4px; }
+.dash .d-card { background:var(--d-surface); border:1px solid var(--d-line); border-radius:var(--d-rcard); box-shadow:var(--d-shadow); padding:22px 24px; }
+.dash .d-eyebrow { font-size:11px; text-transform:uppercase; letter-spacing:.07em; color:var(--d-ink-faint); font-weight:600; }
+.dash .d-big { font-size:28px; font-weight:700; letter-spacing:-.03em; color:var(--d-ink); margin-top:10px; }
+.dash .d-note { color:var(--d-ink-soft); font-size:13px; }
+.dash .d-stat { background:var(--d-surface-2); border:1px solid var(--d-line); border-radius:12px; padding:14px 16px; }
+.dash .d-stat .n { font-size:26px; font-weight:700; letter-spacing:-.03em; color:var(--d-ink); }
+.dash .d-stat .l { font-size:12px; color:var(--d-ink-soft); margin-top:2px; }
+.dash .d-stat .h { font-size:11px; color:var(--d-ink-faint); margin-top:2px; }
+.dash .d-btn { display:inline-flex; align-items:center; justify-content:center; border:1px solid var(--d-line-2); background:var(--d-surface-2); color:var(--d-ink); border-radius:var(--d-rbtn); padding:10px 16px; font-size:13px; font-weight:600; font-family:inherit; transition:border-color .15s, background .15s; }
+.dash .d-btn:hover { border-color:var(--d-ink-faint); }
+.dash .d-btn-primary { background:var(--d-green); border-color:var(--d-green); color:#fff; }
+.dash .d-btn-primary:hover { background:var(--d-green-deep); border-color:var(--d-green-deep); }
+.dash .d-btn:disabled { opacity:.5; cursor:default; }
+.dash .d-input { width:100%; border:1px solid var(--d-line-2); background:var(--d-surface); color:var(--d-ink); border-radius:var(--d-rinput); padding:10px 12px; font-size:14px; font-family:inherit; outline:none; transition:border-color .15s, box-shadow .15s; }
+.dash .d-input:focus { border-color:var(--d-green); box-shadow:0 0 0 3px rgba(14,106,79,.12); }
+.dash .d-input:disabled { background:var(--d-surface-3); color:var(--d-ink-soft); }
+.dash .d-label { font-size:13px; font-weight:600; color:var(--d-ink); display:block; margin-bottom:6px; }
+.dash .d-pill { display:inline-block; font-size:12px; font-weight:600; border-radius:999px; padding:3px 10px; }
+.dash .d-pill.ok { background:rgba(14,106,79,.12); color:var(--d-green); }
+.dash .d-pill.warn { background:rgba(232,151,58,.16); color:var(--d-amber); }
+.dash .d-pill.bad { background:rgba(217,83,63,.14); color:var(--d-ember); }
+.dash .d-pill.mut { background:var(--d-surface-3); color:var(--d-ink-soft); }
+.dash .d-table { width:100%; border-collapse:collapse; }
+.dash .d-table td { padding:13px 0; border-top:1px solid var(--d-line); font-size:14px; color:var(--d-ink); }
+.dash .d-table tr:first-child td { border-top:none; }
+.dash .d-msg { border:1px solid var(--d-line); background:var(--d-surface-2); border-radius:14px; padding:16px; }
+.dash .d-err { color:var(--d-ember); font-size:13px; }
+.dash .d-ok { color:var(--d-green); font-size:13px; }
+.dash a.d-link { color:var(--d-green); font-weight:600; }
+.dash h1, .dash h2, .dash h3, .dash h4 { font-family:inherit; font-weight:700; letter-spacing:-.02em; line-height:1.15; }

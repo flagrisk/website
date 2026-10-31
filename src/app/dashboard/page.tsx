@@ -120,63 +120,67 @@ export default async function DashboardPage() {
     shareName = "";
   }
 
+  const maxReward =
+    REFERRAL_REWARDS.signup +
+    REFERRAL_REWARDS.circle +
+    REFERRAL_REWARDS.paid_plan;
+
   return (
-    <main className="min-h-screen bg-mist">
+    <main className="dash">
       {/* top bar */}
-      <header className="border-b border-line bg-white">
-        <div className="mx-auto flex max-w-[960px] items-center justify-between px-5 py-4">
-          <Link href="/" className="flex items-center gap-2">
-            <span className="inline-flex h-7 w-7 items-center justify-center rounded-[7px] bg-night text-lime font-bold text-sm">
-              F!
-            </span>
-            <span className="font-semibold text-night">FlagRisk</span>
+      <header className="d-topbar">
+        <div className="mx-auto flex max-w-[960px] items-center justify-between px-5 py-3.5">
+          <Link
+            href="/"
+            className="flex items-center gap-2"
+            aria-label="FlagRisk home"
+          >
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/img/logo.png" alt="" className="h-7 w-7 rounded-[7px]" />
+            <span className="d-word">FlagRisk</span>
           </Link>
           <div className="flex items-center gap-4">
-            <span className="hidden text-sm text-slate sm:inline">
+            <span
+              className="hidden text-[13px] sm:inline"
+              style={{ color: "var(--d-ink-soft)" }}
+            >
               {user.email}
             </span>
             <form action={signOutAction}>
-              <button className="rounded-[9px] border border-line px-3 py-1.5 text-sm font-medium text-ink transition hover:bg-mist">
-                Log out
-              </button>
+              <button className="d-btn">Log out</button>
             </form>
           </div>
         </div>
       </header>
 
       <div className="mx-auto max-w-[960px] px-5 py-10">
-        <h1 className="text-2xl font-semibold text-night">
+        <h1 className="d-h1">
           Welcome{displayName ? `, ${displayName}` : ""}
         </h1>
-        <p className="mt-1 text-slate">Your plan, your circle, your earnings.</p>
+        <p className="d-sub">Your plan, your circle, your earnings.</p>
 
         <div className="mt-8 grid gap-6 md:grid-cols-2">
           {/* Subscription */}
-          <section className="rounded-[14px] border border-line bg-white p-6">
-            <h2 className="text-sm font-semibold uppercase tracking-wide text-slate">
-              Your plan
-            </h2>
-            <p className="mt-3 text-2xl font-semibold text-night">{subTier}</p>
-            <p className="mt-1 text-sm text-slate">
+          <section className="d-card">
+            <h2 className="d-eyebrow">Your plan</h2>
+            <p className="d-big">{subTier}</p>
+            <p className="d-note" style={{ marginTop: 4 }}>
               {isPaid ? "Active" : "Free plan, upgrade any time"}
             </p>
             <Link
               href="/plans"
-              className="mt-4 inline-block rounded-[10px] bg-night px-4 py-2 text-sm font-semibold text-white transition hover:bg-dusk"
+              className="d-btn d-btn-primary"
+              style={{ marginTop: 18 }}
             >
               {isPaid ? "Change plan" : "Upgrade"}
             </Link>
           </section>
 
           {/* Earnings */}
-          <section className="rounded-[14px] border border-line bg-white p-6">
-            <h2 className="text-sm font-semibold uppercase tracking-wide text-slate">
-              Referral earnings
-            </h2>
-            <p className="mt-3 text-2xl font-semibold text-night">
-              {formatNaira(balance.available_naira)}
-            </p>
-            <p className="mt-1 text-sm text-slate">
+          <section className="d-card">
+            <h2 className="d-eyebrow">Referral earnings</h2>
+            <p className="d-big">{formatNaira(balance.available_naira)}</p>
+            <p className="d-note" style={{ marginTop: 4 }}>
               available · {formatNaira(balance.earned_naira)} earned in total
             </p>
             <div className="mt-4">
@@ -189,25 +193,21 @@ export default async function DashboardPage() {
         </div>
 
         {/* Referral link + progress */}
-        <section className="mt-6 rounded-[14px] border border-line bg-white p-6">
-          <h2 className="text-sm font-semibold uppercase tracking-wide text-slate">
-            Invite and earn
-          </h2>
-          <p className="mt-2 text-sm text-ink">
-            Share your link. You earn up to{" "}
-            {formatNaira(
-              REFERRAL_REWARDS.signup +
-                REFERRAL_REWARDS.circle +
-                REFERRAL_REWARDS.paid_plan,
-            )}{" "}
-            for every person who joins, builds a circle, and starts a paid plan.
+        <section className="d-card mt-6">
+          <h2 className="d-eyebrow">Invite and earn</h2>
+          <p
+            className="d-note"
+            style={{ marginTop: 8, color: "var(--d-ink)" }}
+          >
+            Share your link. You earn up to {formatNaira(maxReward)} for every
+            person who joins, builds a circle, and starts a paid plan.
           </p>
           <div className="mt-4 max-w-[520px]">
             <CopyLink url={referralUrl} />
           </div>
 
           <div className="mt-6 grid gap-3 sm:grid-cols-3">
-            <Stat label={`People joined`} value={referralCount} />
+            <Stat label="People joined" value={referralCount} />
             {(Object.keys(REFERRAL_REWARDS) as Array<keyof typeof REFERRAL_REWARDS>).map(
               (m) => (
                 <Stat
@@ -227,11 +227,9 @@ export default async function DashboardPage() {
         </section>
 
         {/* Payout account */}
-        <section className="mt-6 rounded-[14px] border border-line bg-white p-6">
-          <h2 className="text-sm font-semibold uppercase tracking-wide text-slate">
-            Payout account
-          </h2>
-          <p className="mt-2 mb-4 text-sm text-ink">
+        <section className="d-card mt-6">
+          <h2 className="d-eyebrow">Payout account</h2>
+          <p className="d-note" style={{ margin: "8px 0 16px" }}>
             Where we send your referral earnings when you withdraw.
           </p>
           <div className="max-w-[440px]">
@@ -243,29 +241,30 @@ export default async function DashboardPage() {
         </section>
 
         {/* Payout history */}
-        <section className="mt-6 rounded-[14px] border border-line bg-white p-6">
-          <h2 className="text-sm font-semibold uppercase tracking-wide text-slate">
-            Withdrawals
-          </h2>
+        <section className="d-card mt-6">
+          <h2 className="d-eyebrow">Withdrawals</h2>
           {payouts && payouts.length > 0 ? (
-            <ul className="mt-4 divide-y divide-line">
-              {payouts.map((p) => (
-                <li
-                  key={p.id}
-                  className="flex items-center justify-between py-3 text-sm"
-                >
-                  <span className="text-ink">
-                    {formatNaira(p.amount_naira)}
-                  </span>
-                  <span className="text-slate">
-                    {new Date(p.created_at).toLocaleDateString("en-NG")}
-                  </span>
-                  <PayoutStatus status={p.status} />
-                </li>
-              ))}
-            </ul>
+            <table className="d-table" style={{ marginTop: 14 }}>
+              <tbody>
+                {payouts.map((p) => (
+                  <tr key={p.id}>
+                    <td style={{ fontWeight: 600 }}>
+                      {formatNaira(p.amount_naira)}
+                    </td>
+                    <td style={{ color: "var(--d-ink-soft)" }}>
+                      {new Date(p.created_at).toLocaleDateString("en-NG")}
+                    </td>
+                    <td style={{ textAlign: "right" }}>
+                      <PayoutStatus status={p.status} />
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           ) : (
-            <p className="mt-3 text-sm text-slate">No withdrawals yet.</p>
+            <p className="d-note" style={{ marginTop: 12 }}>
+              No withdrawals yet.
+            </p>
           )}
         </section>
       </div>
@@ -283,27 +282,21 @@ function Stat({
   hint?: string;
 }) {
   return (
-    <div className="rounded-[10px] bg-mist px-4 py-3">
-      <p className="text-xl font-semibold text-night">{value}</p>
-      <p className="text-xs text-slate">{label}</p>
-      {hint && <p className="text-xs text-slate/70">{hint}</p>}
+    <div className="d-stat">
+      <p className="n">{value}</p>
+      <p className="l">{label}</p>
+      {hint && <p className="h">{hint}</p>}
     </div>
   );
 }
 
 function PayoutStatus({ status }: { status: string }) {
   const map: Record<string, string> = {
-    pending: "bg-amber/15 text-amber",
-    processing: "bg-amber/15 text-amber",
-    paid: "bg-teal/15 text-teal",
-    failed: "bg-red-50 text-red-600",
-    reversed: "bg-red-50 text-red-600",
+    pending: "warn",
+    processing: "warn",
+    paid: "ok",
+    failed: "bad",
+    reversed: "bad",
   };
-  return (
-    <span
-      className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${map[status] ?? "bg-mist text-slate"}`}
-    >
-      {status}
-    </span>
-  );
+  return <span className={`d-pill ${map[status] ?? "mut"}`}>{status}</span>;
 }

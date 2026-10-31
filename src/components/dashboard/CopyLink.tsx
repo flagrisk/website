@@ -21,12 +21,9 @@ export function CopyLink({ url }: { url: string }) {
         readOnly
         value={url}
         onFocus={(e) => e.currentTarget.select()}
-        className="min-w-0 flex-1 rounded-[10px] border border-line bg-mist px-3 py-2 text-sm text-ink"
+        className="d-input min-w-0 flex-1"
       />
-      <button
-        onClick={copy}
-        className="shrink-0 rounded-[10px] bg-night px-4 py-2 text-sm font-semibold text-white transition hover:bg-dusk"
-      >
+      <button onClick={copy} className="d-btn d-btn-primary shrink-0">
         {copied ? "Copied" : "Copy"}
       </button>
     </div>

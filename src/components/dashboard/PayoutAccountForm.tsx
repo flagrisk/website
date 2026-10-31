@@ -1,14 +1,23 @@
 "use client";
 
 import { useActionState } from "react";
+import { useFormStatus } from "react-dom";
 import {
   savePayoutAccountAction,
   type AccountState,
 } from "@/lib/actions/payout-account";
 import type { Bank } from "@/lib/paystack";
-import { SubmitButton } from "@/components/auth/SubmitButton";
 
 const initial: AccountState = { error: null };
+
+function SaveButton() {
+  const { pending } = useFormStatus();
+  return (
+    <button type="submit" disabled={pending} className="d-btn d-btn-primary">
+      {pending ? "Saving..." : "Save payout account"}
+    </button>
+  );
+}
 
 export function PayoutAccountForm({
   banks,
@@ -22,21 +31,17 @@ export function PayoutAccountForm({
   return (
     <form action={formAction} className="space-y-3">
       {current && (
-        <p className="text-sm text-slate">
-          Current account on file: <span className="text-ink">{current}</span>.
-          Saving replaces it.
+        <p className="d-note">
+          Current account on file:{" "}
+          <span style={{ color: "var(--d-ink)" }}>{current}</span>. Saving
+          replaces it.
         </p>
       )}
 
       <label className="block">
-        <span className="text-sm font-medium text-ink">Bank</span>
+        <span className="d-label">Bank</span>
         {banks.length > 0 ? (
-          <select
-            name="bank_code"
-            required
-            defaultValue=""
-            className="mt-1.5 w-full rounded-[10px] border border-line bg-white px-3 py-2.5 text-sm text-ink outline-none focus:border-night"
-          >
+          <select name="bank_code" required defaultValue="" className="d-input">
             <option value="" disabled>
               Choose your bank
             </option>
@@ -51,13 +56,13 @@ export function PayoutAccountForm({
             name="bank_code"
             required
             placeholder="Bank code"
-            className="mt-1.5 w-full rounded-[10px] border border-line bg-white px-3 py-2.5 text-sm text-ink outline-none focus:border-night"
+            className="d-input"
           />
         )}
       </label>
 
       <label className="block">
-        <span className="text-sm font-medium text-ink">Account number</span>
+        <span className="d-label">Account number</span>
         <input
           name="account_number"
           required
@@ -65,21 +70,19 @@ export function PayoutAccountForm({
           pattern="\d{10}"
           maxLength={10}
           placeholder="10-digit NUBAN"
-          className="mt-1.5 w-full rounded-[10px] border border-line bg-white px-3 py-2.5 text-sm text-ink outline-none focus:border-night"
+          className="d-input"
         />
       </label>
 
       {state.error && (
-        <p className="text-sm text-red-600" role="alert">
+        <p className="d-err" role="alert">
           {state.error}
         </p>
       )}
       {state.ok && (
-        <p className="text-sm text-teal">
-          Saved to {state.name}. Your earnings will go here.
-        </p>
+        <p className="d-ok">Saved to {state.name}. Your earnings will go here.</p>
       )}
-      <SubmitButton>Save payout account</SubmitButton>
+      <SaveButton />
     </form>
   );
 }

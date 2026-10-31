@@ -39,10 +39,10 @@ export function ShareMessages({
   if (!botNumber) {
     return (
       <div className="mt-8">
-        <h3 className="text-sm font-semibold text-ink">
+        <h3 style={{ color: "var(--d-ink)", fontSize: 14, fontWeight: 600 }}>
           Invite on WhatsApp
         </h3>
-        <p className="mt-1 text-sm text-slate">
+        <p className="d-note" style={{ marginTop: 4 }}>
           WhatsApp invites will appear here once the FlagRisk line is connected.
         </p>
       </div>
@@ -73,28 +73,29 @@ export function ShareMessages({
 
   return (
     <div className="mt-8">
-      <h3 className="text-sm font-semibold text-ink">
+      <h3 style={{ color: "var(--d-ink)", fontSize: 14, fontWeight: 600 }}>
         Messages you can send on WhatsApp
       </h3>
-      <p className="mt-1 text-sm text-slate">
+      <p className="d-note" style={{ marginTop: 4 }}>
         Copy one and send it to a friend or a group. The link opens the FlagRisk
         line with your invite ready to send.
       </p>
 
       <div className="mt-4 space-y-3">
         {messages.map((m) => (
-          <div
-            key={m.id}
-            className="rounded-[12px] border border-line bg-mist p-4"
-          >
+          <div key={m.id} className="d-msg">
             <div className="mb-2 flex items-center justify-between gap-3">
-              <span className="text-xs font-medium uppercase tracking-wide text-slate">
+              <span
+                className="text-xs font-semibold uppercase tracking-wide"
+                style={{ color: "var(--d-ink-faint)" }}
+              >
                 {m.label}
               </span>
               <div className="flex shrink-0 items-center gap-2">
                 <button
                   onClick={() => copy(m.id, m.text)}
-                  className="rounded-[8px] bg-night px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-dusk"
+                  className="d-btn d-btn-primary"
+                  style={{ padding: "7px 12px", fontSize: 12 }}
                 >
                   {copiedId === m.id ? "Copied" : "Copy"}
                 </button>
@@ -102,13 +103,17 @@ export function ShareMessages({
                   href={`https://wa.me/?text=${encodeURIComponent(m.text)}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="rounded-[8px] border border-line bg-white px-3 py-1.5 text-xs font-semibold text-ink transition hover:bg-white/60"
+                  className="d-btn"
+                  style={{ padding: "7px 12px", fontSize: 12 }}
                 >
                   Send on WhatsApp
                 </a>
               </div>
             </div>
-            <p className="whitespace-pre-wrap text-sm leading-relaxed text-ink">
+            <p
+              className="whitespace-pre-wrap text-sm leading-relaxed"
+              style={{ color: "var(--d-ink)" }}
+            >
               {m.text}
             </p>
           </div>
