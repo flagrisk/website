@@ -56,7 +56,7 @@ a{text-decoration:none;color:inherit}
 .store .st .s2{font-family:'Hanken Grotesk';font-weight:700;font-size:1rem}
 .store.on-dark{background:#fff;color:var(--night);border-color:#fff}.store.on-dark:hover{background:var(--parchment)}
 /* ---- SECTION SYSTEM (grey.co: contained rounded feature cards + full-bleed bands) ---- */
-.feat{max-width:1200px;width:calc(100% - 48px);margin:26px auto;border-radius:20px;overflow:hidden;display:grid;grid-template-columns:.86fr 1.14fr;align-items:stretch;min-height:516px}
+.feat{max-width:1200px;width:calc(100% - 48px);margin:26px auto;border-radius:20px;overflow:hidden;display:grid;grid-template-columns:.86fr 1.14fr;align-items:stretch;min-height:516px;scroll-margin-top:90px}
 .feat .copy{display:flex;flex-direction:column;justify-content:center;padding:64px 24px 64px 60px;z-index:2}
 .feat.rev{grid-template-columns:1.14fr .86fr}.feat.rev .copy{order:2;padding:64px 60px 64px 24px}
 .feat.rev .vis{order:1}
