@@ -21,9 +21,8 @@ export function AuthShell({
           className="flex items-center gap-2 mb-8 justify-center"
           aria-label="FlagRisk home"
         >
-          <span className="inline-flex h-8 w-8 items-center justify-center rounded-[8px] bg-night text-lime font-bold text-lg">
-            F!
-          </span>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/img/logo.png" alt="" className="h-9 w-9 rounded-[10px]" />
           <span className="font-semibold text-night text-lg">FlagRisk</span>
         </Link>
 
