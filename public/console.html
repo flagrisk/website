@@ -104,6 +104,20 @@
   }
   .navitem .nav-count.zero { background: var(--surface-3); color: var(--ink-faint); }
 
+  /* grouped, collapsible nav */
+  .nav-group { display: flex; flex-direction: column; gap: 3px; }
+  .nav-ghead {
+    display: flex; align-items: center; justify-content: space-between; width: 100%;
+    background: transparent; border: none; cursor: pointer; font-family: var(--ui);
+    font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.1em;
+    color: var(--ink-faint); font-weight: 600; padding: 10px 11px 6px; margin-top: 4px;
+  }
+  .nav-ghead:hover { color: var(--ink-soft); }
+  .nav-ghead .chev { transition: transform 0.15s var(--ease); opacity: 0.75; flex: none; }
+  .nav-group.collapsed .nav-ghead .chev { transform: rotate(-90deg); }
+  .nav-group.collapsed .nav-gitems { display: none; }
+  .nav-gitems { display: flex; flex-direction: column; gap: 3px; }
+
   .main { overflow: hidden; position: relative; min-width: 0; }
   .section { height: 100%; }
   .section.hidden { display: none !important; }
@@ -623,22 +637,68 @@ function setAuto(on) {
 $("autoBtn").addEventListener("click", () => setAuto(!autoOn));
 
 // ---- Navigation ----
+// Sections are grouped so the sidebar stays legible as more land. Each group
+// collapses, and that collapsed state is remembered per browser.
+const NAV_GROUPS = [
+  { label: "Overview",      keys: ["overview"] },
+  { label: "Growth",        keys: ["referrals", "payouts", "whatsapp", "billing"] },
+  { label: "Safety",        keys: ["incidents", "moderation", "safety", "analytics", "engine"] },
+  { label: "People",        keys: ["people", "organizations", "support"] },
+  { label: "Compliance",    keys: ["requests", "compliance", "config", "audit"] },
+  { label: "Beta testing",  keys: ["testing", "testingext", "signups"] },
+  { label: "System",        keys: ["system", "settings"] },
+];
+const CHEV = '<svg class="chev" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>';
+function getNavCollapsed() { try { return JSON.parse(localStorage.getItem("fr-nav-collapsed") || "{}"); } catch (e) { return {}; } }
+function setNavCollapsed(state) { try { localStorage.setItem("fr-nav-collapsed", JSON.stringify(state)); } catch (e) {} }
+function toggleNavGroup(label) {
+  const g = document.querySelector('.nav-group[data-group="' + label + '"]');
+  if (!g) return;
+  const col = g.classList.toggle("collapsed");
+  const state = getNavCollapsed();
+  if (col) state[label] = true; else delete state[label];
+  setNavCollapsed(state);
+}
 function buildNav() {
   const nav = $("sidenav");
   const allowed = capsSections();
-  const items = SECTIONS.filter((s) => allowed.indexOf(s.key) >= 0);
-  if (!items.length) { nav.innerHTML = '<div class="nav-label">Operations</div><div style="padding:10px 12px;color:var(--ink-soft);font-size:13px;">No sections are enabled for this account.</div>'; return; }
-  nav.innerHTML = '<div class="nav-label">Operations</div>' +
-    items.map((s) => '<button class="navitem" data-key="' + s.key + '">' + (ICONS[s.key] || "") + '<span>' + esc(s.label) + '</span>' +
-      (s.key === "moderation" ? '<span class="nav-count zero" id="navCount">0</span>' : '') + '</button>').join("") +
-    (CAPS && CAPS.role ? '<div class="nav-label" style="margin-top:auto;">Signed in as</div><div style="padding:0 12px 10px;color:var(--ink-soft);font-size:12px;text-transform:capitalize;">' + esc(String(CAPS.role).replace(/_/g, " ")) + '</div>' : '');
+  if (!allowed.length) { nav.innerHTML = '<div class="nav-label">Operations</div><div style="padding:10px 12px;color:var(--ink-soft);font-size:13px;">No sections are enabled for this account.</div>'; return; }
+  const byKey = {}; SECTIONS.forEach((s) => { byKey[s.key] = s; });
+  const collapsed = getNavCollapsed();
+  const itemHtml = (s) => '<button class="navitem" data-key="' + s.key + '">' + (ICONS[s.key] || "") + '<span>' + esc(s.label) + '</span>' +
+    (s.key === "moderation" ? '<span class="nav-count zero" id="navCount">0</span>' : '') + '</button>';
+  const used = {};
+  let html = "";
+  NAV_GROUPS.forEach((g) => {
+    const keys = g.keys.filter((k) => allowed.indexOf(k) >= 0 && byKey[k]);
+    if (!keys.length) return;
+    keys.forEach((k) => { used[k] = true; });
+    const isCol = !!collapsed[g.label];
+    html += '<div class="nav-group' + (isCol ? " collapsed" : "") + '" data-group="' + esc(g.label) + '">' +
+      '<button class="nav-ghead" data-group="' + esc(g.label) + '"><span>' + esc(g.label) + '</span>' + CHEV + '</button>' +
+      '<div class="nav-gitems">' + keys.map((k) => itemHtml(byKey[k])).join("") + '</div></div>';
+  });
+  // Any allowed section not placed in a group still shows, under "Other".
+  const leftover = allowed.filter((k) => !used[k] && byKey[k]);
+  if (leftover.length) {
+    const isCol = !!collapsed["Other"];
+    html += '<div class="nav-group' + (isCol ? " collapsed" : "") + '" data-group="Other">' +
+      '<button class="nav-ghead" data-group="Other"><span>Other</span>' + CHEV + '</button>' +
+      '<div class="nav-gitems">' + leftover.map((k) => itemHtml(byKey[k])).join("") + '</div></div>';
+  }
+  html += (CAPS && CAPS.role ? '<div class="nav-label" style="margin-top:auto;">Signed in as</div><div style="padding:0 12px 10px;color:var(--ink-soft);font-size:12px;text-transform:capitalize;">' + esc(String(CAPS.role).replace(/_/g, " ")) + '</div>' : '');
+  nav.innerHTML = html;
   nav.querySelectorAll(".navitem").forEach((el) => el.addEventListener("click", () => navTo(el.dataset.key)));
+  nav.querySelectorAll(".nav-ghead").forEach((el) => el.addEventListener("click", () => toggleNavGroup(el.dataset.group)));
 }
 function switchSection(key) {
   if (capsSections().indexOf(key) < 0) return;
   activeSection = key;
   SECTIONS.forEach((s) => { const el = $("sec-" + s.key); if (el) el.classList.toggle("hidden", s.key !== key); });
   document.querySelectorAll(".navitem").forEach((el) => el.classList.toggle("active", el.dataset.key === key));
+  // Keep the active item visible even if its group was collapsed.
+  const activeBtn = document.querySelector('.navitem[data-key="' + key + '"]');
+  if (activeBtn) { const grp = activeBtn.closest(".nav-group"); if (grp) grp.classList.remove("collapsed"); }
   const s = SECTIONS.find((x) => x.key === key); if (s) s.load();
 }
 
