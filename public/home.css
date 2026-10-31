@@ -428,9 +428,8 @@ html{scroll-behavior:smooth}
 @media(max-width:600px){
   .mbr{display:inline}
   .hero .h1{text-wrap:normal}
-  .hero .avs i{width:34px;height:34px;margin-left:-10px}
-  .hero .trust{gap:11px;align-items:center}
-  .hero .trust .tt{font-size:.84rem;line-height:1.4}
+  .hero .trust{flex-direction:column;align-items:flex-start;gap:10px}
+  .hero .trust .tt{font-size:.86rem;line-height:1.45}
 }
 /* ===== capabilities grid: responsive ===== */
 .capsbento{grid-template-columns:repeat(3,1fr);grid-auto-rows:minmax(200px,auto);grid-auto-flow:row}
