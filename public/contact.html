@@ -51,28 +51,6 @@
       </div>
     </div>
 
-    <div class="reqform" id="message" style="max-width:720px">
-      <h3>Send us a message</h3>
-      <p>No account needed. Tell us what you need and we will reply to your email, usually within one working day.</p>
-      <form class="frm" id="supForm" novalidate>
-        <div class="row2">
-          <label class="field"><span>Your name <span class="hint">(optional)</span></span><input type="text" name="name" autocomplete="name" maxlength="120"></label>
-          <label class="field"><span>Email</span><input type="email" name="email" autocomplete="email" required maxlength="160" placeholder="you@example.com"></label>
-        </div>
-        <label class="field"><span>Subject</span><input type="text" name="subject" required maxlength="160" placeholder="What is this about?"></label>
-        <label class="field"><span>Message</span><textarea name="message" required maxlength="4000"></textarea></label>
-        <div class="hp" aria-hidden="true"><label>Company<input type="text" name="company" tabindex="-1" autocomplete="off"></label></div>
-        <div class="frm-actions">
-          <button type="submit">Send message</button>
-          <p class="frm-msg" id="supMsg" role="alert"></p>
-        </div>
-      </form>
-      <div class="frm-ok" id="supOk" hidden>
-        <h3>Message received</h3>
-        <p>Thank you. Your message has reached FlagRisk Support, and we will reply to your email, usually within one working day.</p>
-      </div>
-    </div>
-
     <div class="doc-grid" style="grid-template-columns:1fr">
       <div class="doc-body" style="max-width:none">
         <section class="clause">
@@ -117,32 +95,6 @@
     <div class="big" aria-hidden="true">FlagRisk</div>
   </footer>
 </div>
-<script>
-(function(){
-  var f = document.getElementById('supForm');
-  if (!f) return;
-  var msg = document.getElementById('supMsg');
-  var ok = document.getElementById('supOk');
-  var btn = f.querySelector('button[type=submit]');
-  var get = function(n){ return (f.elements[n] && f.elements[n].value) || ''; };
-  f.addEventListener('submit', function(e){
-    e.preventDefault();
-    msg.className = 'frm-msg'; msg.textContent = '';
-    var email = get('email').trim();
-    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)){ msg.className = 'frm-msg err'; msg.textContent = 'Enter a valid email address.'; return; }
-    if (!get('subject').trim() || !get('message').trim()){ msg.className = 'frm-msg err'; msg.textContent = 'Enter a subject and a message.'; return; }
-    var label = btn.textContent;
-    btn.disabled = true; btn.textContent = 'Sending...';
-    var payload = { name: get('name'), email: email, subject: get('subject'), message: get('message'), company: get('company') };
-    fetch('/api/support', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) })
-      .then(function(r){ return r.json().then(function(d){ return { ok: r.ok, d: d }; }); })
-      .then(function(res){
-        if (res.ok && res.d && res.d.ok){ f.style.display = 'none'; ok.hidden = false; ok.scrollIntoView({ behavior: 'smooth', block: 'center' }); }
-        else { msg.className = 'frm-msg err'; msg.textContent = (res.d && res.d.error) || 'We could not send your message. Please try again.'; btn.disabled = false; btn.textContent = label; }
-      })
-      .catch(function(){ msg.className = 'frm-msg err'; msg.textContent = 'Network problem. Please try again.'; btn.disabled = false; btn.textContent = label; });
-  });
-})();
-</script>
+<script defer src="/support-chat.js"></script>
 </body>
 </html>
