@@ -1,5 +1,50 @@
+# FlagRisk — https://flagrisk.org
+# Search crawlers are welcome. Private app areas are closed.
+
 User-agent: *
 Allow: /
-Disallow: /console.html
 Disallow: /api/
 Disallow: /dashboard
+Disallow: /checkout
+Disallow: /verify
+Disallow: /auth/
+Disallow: /console.html
+
+# Generative and answer engines are welcome to read and cite FlagRisk.
+User-agent: GPTBot
+Allow: /
+
+User-agent: OAI-SearchBot
+Allow: /
+
+User-agent: ChatGPT-User
+Allow: /
+
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: Claude-Web
+Allow: /
+
+User-agent: anthropic-ai
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: Perplexity-User
+Allow: /
+
+User-agent: Google-Extended
+Allow: /
+
+User-agent: Applebot-Extended
+Allow: /
+
+User-agent: CCBot
+Allow: /
+
+User-agent: Amazonbot
+Allow: /
+
+Sitemap: https://flagrisk.org/sitemap.xml

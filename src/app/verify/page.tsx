@@ -4,7 +4,10 @@ import { redirect } from "next/navigation";
 import { AuthShell } from "@/components/auth/AuthShell";
 import { VerifyForm } from "@/components/auth/VerifyForm";
 
-export const metadata: Metadata = { title: "Confirm your number" };
+export const metadata: Metadata = {
+  title: "Confirm your number",
+  robots: { index: false, follow: false },
+};
 export const instant = false;
 
 export default async function VerifyPage({

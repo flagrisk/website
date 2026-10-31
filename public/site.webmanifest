@@ -1,0 +1,14 @@
+{
+  "name": "FlagRisk",
+  "short_name": "FlagRisk",
+  "description": "Community safety for the people you trust. Raise an alarm, share a trip, and know your area.",
+  "lang": "en-NG",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#1B1E3D",
+  "theme_color": "#1B1E3D",
+  "icons": [
+    { "src": "/img/logo.png", "sizes": "180x180", "type": "image/png", "purpose": "any" }
+  ]
+}

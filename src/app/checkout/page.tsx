@@ -5,7 +5,10 @@ import { createClient } from "@/lib/supabase/server";
 import { TIERS, formatNaira } from "@/lib/tiers";
 import { CheckoutClient } from "@/components/checkout/CheckoutClient";
 
-export const metadata: Metadata = { title: "Checkout" };
+export const metadata: Metadata = {
+  title: "Checkout",
+  robots: { index: false, follow: false },
+};
 export const instant = false;
 
 export default async function CheckoutPage({

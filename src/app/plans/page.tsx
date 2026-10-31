@@ -8,6 +8,9 @@ export const metadata: Metadata = {
   title: "Plans",
   description:
     "Choose how far your FlagRisk circle can reach. Start free, or pick a plan for a wider alert radius and longer history. Secure payment by Paystack.",
+  // The public-facing plans page is the static /pricing route (in the nav and
+  // sitemap); point search engines there so the two do not compete.
+  alternates: { canonical: "/pricing" },
 };
 
 const FAQ = [

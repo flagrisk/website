@@ -7,7 +7,10 @@ import {
   type DashData,
 } from "@/components/dashboard/DashboardShell";
 
-export const metadata: Metadata = { title: "Dashboard" };
+export const metadata: Metadata = {
+  title: "Dashboard",
+  robots: { index: false, follow: false },
+};
 
 // Per-user, always live: read cookies/session at request time, never prerender.
 export const instant = false;

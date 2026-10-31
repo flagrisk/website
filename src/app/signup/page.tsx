@@ -3,7 +3,12 @@ import type { Metadata } from "next";
 import { AuthShell } from "@/components/auth/AuthShell";
 import { SignupForm } from "@/components/auth/SignupForm";
 
-export const metadata: Metadata = { title: "Create your account" };
+export const metadata: Metadata = {
+  title: "Create your account",
+  description:
+    "Create your free FlagRisk account, build a circle of people you trust, and keep each other safe. Works on the app, WhatsApp, SMS and USSD.",
+  alternates: { canonical: "/signup" },
+};
 
 export const instant = false;
 
