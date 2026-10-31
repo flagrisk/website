@@ -224,8 +224,8 @@ a{text-decoration:none;color:inherit}
   .ftr .soc a img{width:38px}
   /* keep the hero and store buttons on one line on mobile */
   .hero .cta-row,.phero .cta-row,.cta .cta-row{flex-wrap:nowrap;gap:10px}
-  .hero .cta-row>.btn,.phero .cta-row>.btn{flex:1 1 0;min-width:0;padding:.82rem .7rem;font-size:.92rem;justify-content:center;text-align:center}
-  .cta .cta-row>.store{flex:1 1 0;min-width:0!important;gap:8px;padding:10px 10px;justify-content:center}
+  .hero .cta-row>.btn,.phero .cta-row>.btn{flex:1 1 0;min-width:0;gap:.4rem;padding:.58rem .5rem;font-size:.84rem;white-space:nowrap;justify-content:center}
+  .cta .cta-row>.store{flex:1 1 0;min-width:0!important;gap:7px;padding:8px 8px;justify-content:center}
 }
 /* official store badges */
 .storebadge{display:inline-block;transition:transform .2s}
