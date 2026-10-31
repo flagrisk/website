@@ -38,6 +38,11 @@ const nextConfig: NextConfig = {
     return {
       beforeFiles: [
         { source: `/${ADMIN_CONSOLE_PATH}`, destination: "/console.html" },
+        // The console is a single-page app that gives each section its own URL
+        // (base/moderation, base/people, ...). Serve any path under the secret
+        // base with the same console file so a reload or a direct link to a
+        // section works; the app reads the path and opens that section.
+        { source: `/${ADMIN_CONSOLE_PATH}/:path*`, destination: "/console.html" },
         // Marketing site: the design pages are served as isolated static HTML
         // (public/*.html) so they render exactly as designed, independent of the
         // app's React/Tailwind styles. The functional app routes (signup, login,
@@ -74,6 +79,7 @@ const nextConfig: NextConfig = {
     return [
       { source: "/console.html", headers: [robots] },
       { source: `/${ADMIN_CONSOLE_PATH}`, headers: [robots] },
+      { source: `/${ADMIN_CONSOLE_PATH}/:path*`, headers: [robots] },
     ];
   },
 };
