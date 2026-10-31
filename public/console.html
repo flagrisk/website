@@ -337,6 +337,7 @@
       <section class="section pad hidden" id="sec-referrals"></section>
       <section class="section pad hidden" id="sec-payouts"></section>
       <section class="section pad hidden" id="sec-whatsapp"></section>
+      <section class="section pad hidden" id="sec-requests"></section>
       <section class="section pad hidden" id="sec-analytics"></section>
       <section class="section pad hidden" id="sec-incidents"></section>
       <section class="section mod hidden" id="sec-moderation">
@@ -409,6 +410,7 @@ const ICONS = {
   referrals: ic('<circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.6" y1="10.5" x2="15.4" y2="6.5"/><line x1="8.6" y1="13.5" x2="15.4" y2="17.5"/>'),
   payouts: ic('<rect x="2" y="5" width="20" height="14" rx="2"/><circle cx="12" cy="12" r="3"/><path d="M6 5v0M18 19v0"/>'),
   whatsapp: ic('<path d="M21 11.5a8.5 8.5 0 0 1-12.5 7.5L3 20l1.1-5.4A8.5 8.5 0 1 1 21 11.5z"/>'),
+  requests: ic('<path d="M9 3h6l2 2h3v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V5h3z"/><path d="M9 12l2 2 4-4"/>'),
   analytics: ic('<path d="M3 3v18h18"/><rect x="7" y="10" width="3" height="7" rx="0.5"/><rect x="12" y="6" width="3" height="11" rx="0.5"/><rect x="17" y="13" width="3" height="4" rx="0.5"/>'),
   safety: ic('<circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="4"/><path d="m4.9 4.9 4.2 4.2M14.9 14.9l4.2 4.2M14.9 9.1l4.2-4.2M4.9 19.1l4.2-4.2"/>'),
   billing: ic('<rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/>'),
@@ -433,6 +435,7 @@ const SECTIONS = [
   { key: "referrals",     label: "Referrals",       load: loadReferrals },
   { key: "payouts",       label: "Payouts",         load: loadPayouts },
   { key: "whatsapp",      label: "WhatsApp",        load: loadWhatsApp },
+  { key: "requests",      label: "Data requests",   load: loadDataRequests },
   { key: "analytics",     label: "Analytics",       load: loadAnalytics },
   { key: "incidents",     label: "Incidents",       load: loadIncidents },
   { key: "moderation",    label: "Moderation",      load: loadQueue },
@@ -511,6 +514,7 @@ function capsSections() {
     if (base.indexOf("referrals") < 0) base.splice(1, 0, "referrals");
     if (base.indexOf("payouts") < 0) base.splice(2, 0, "payouts");
     if (base.indexOf("whatsapp") < 0) base.splice(3, 0, "whatsapp");
+    if (base.indexOf("requests") < 0) base.splice(4, 0, "requests");
   }
   return base;
 }
@@ -923,6 +927,72 @@ async function loadWhatsApp() {
 
   el.innerHTML = '<div class="panel-head"><h1>WhatsApp</h1><span class="sub">The viral motion on the FlagRisk line</span></div>' +
     '<div class="stat-grid" style="margin-bottom:18px;">' + cards + '</div>' + sharersHtml + introsHtml + inviteHtml;
+}
+
+// ============================================================
+//  DATA REQUESTS  (compliance intake from the website:
+//  account deletion and other data subject requests.
+//  web_is_admin gated by admin_data_requests)
+// ============================================================
+const DR_STATUSES = ["new", "verifying", "verified", "actioned", "rejected", "cancelled"];
+const DR_TYPES = { deletion: "Deletion", access: "Access", correction: "Correction", objection: "Objection", withdraw_consent: "Withdraw consent", other: "Other" };
+function drPill(s) { return s === "actioned" ? "ok" : (s === "rejected" || s === "cancelled") ? "bad" : s === "verified" ? "info" : "mut"; }
+async function loadDataRequests() {
+  const el = $("sec-requests");
+  const head = '<div class="panel-head"><h1>Data requests</h1><span class="sub">Account deletion and data subject requests from the website</span></div>';
+  el.innerHTML = head + '<div class="spin">Loading...</div>';
+  const { data, error } = await supabase.rpc("admin_data_requests");
+  if (error) { el.innerHTML = head + adminErr(error); return; }
+  const d = data || {}, c = d.counts || {}, reqs = d.requests || [];
+  const cards = [
+    statCard(Number(c.new || 0).toLocaleString(), "New", 0),
+    statCard(Number(c.verifying || 0).toLocaleString(), "Verifying", 1),
+    statCard(Number(c.open || 0).toLocaleString(), "Open", 2),
+    statCard(Number(c.total || 0).toLocaleString(), "All time", 3),
+  ].join("");
+  const rows = reqs.length ? reqs.map((r) => {
+    const opts = DR_STATUSES.map((s) => '<option value="' + s + '"' + (s === r.status ? ' selected' : '') + '>' + s + '</option>').join("");
+    const note = r.admin_notes ? '<div style="color:var(--ink-faint);font-size:11px;margin-top:4px;">' + esc(r.admin_notes) + '</div>' : '';
+    const reason = r.reason ? '<div style="color:var(--ink-soft);font-size:12px;margin-top:4px;max-width:340px;white-space:pre-wrap;">' + esc(r.reason) + '</div>' : '';
+    return '<tr>' +
+      '<td style="white-space:nowrap;">' + (r.created_at ? timeAgo(r.created_at) : "") + '</td>' +
+      '<td>' + esc(DR_TYPES[r.request_type] || r.request_type) + '</td>' +
+      '<td>' + esc(r.full_name || "—") + reason + '</td>' +
+      '<td class="mono" style="white-space:nowrap;">' + esc(r.phone || "") + '</td>' +
+      '<td class="mono" style="font-size:12px;">' + esc(r.email || "—") + '</td>' +
+      '<td>' + esc(r.channel || "—") + '</td>' +
+      '<td><span class="pill ' + drPill(r.status) + '">' + esc(r.status) + '</span>' + note + '</td>' +
+      '<td style="white-space:nowrap;"><select class="drSel" data-id="' + esc(r.id) + '">' + opts + '</select> ' +
+        '<button class="btn drSave" data-id="' + esc(r.id) + '">Update</button> ' +
+        '<button class="btn drNote" data-id="' + esc(r.id) + '">Note</button></td>' +
+    '</tr>';
+  }).join("") : '<tr><td colspan="8" style="color:var(--ink-soft);">No requests yet.</td></tr>';
+  el.innerHTML = head +
+    '<div class="stat-grid" style="margin-bottom:18px;">' + cards + '</div>' +
+    '<table class="data-table"><thead><tr><th>When</th><th>Type</th><th>Name / reason</th><th>Phone</th><th>Email</th><th>Channel</th><th>Status</th><th></th></tr></thead><tbody>' + rows + '</tbody></table>' +
+    '<p style="color:var(--ink-soft);font-size:12px;margin-top:14px;max-width:720px;">Confirm the person owns the account before you action a deletion. Marking a request actioned does not itself delete the account: do the deletion, then mark it actioned. We reply to every request within one month.</p>';
+  el.querySelectorAll(".drSave").forEach((b) => b.onclick = () => {
+    const id = b.getAttribute("data-id");
+    const sel = el.querySelector('.drSel[data-id="' + id + '"]');
+    setDataRequestStatus(id, sel ? sel.value : null, null);
+  });
+  el.querySelectorAll(".drNote").forEach((b) => b.onclick = () => {
+    const id = b.getAttribute("data-id");
+    const sel = el.querySelector('.drSel[data-id="' + id + '"]');
+    const note = prompt("Add a note to this request:");
+    if (note == null) return;
+    setDataRequestStatus(id, sel ? sel.value : null, note);
+  });
+}
+async function setDataRequestStatus(id, status, note) {
+  toast("Updating...");
+  const params = { p_id: id, p_status: status };
+  if (note != null) params.p_notes = note;
+  const { error } = await supabase.rpc("admin_set_data_request_status", params);
+  if (error) { toast("Failed: " + error.message); return; }
+  toast("Updated");
+  logAccess("data_request_status", id, status);
+  loadDataRequests();
 }
 
 // ============================================================

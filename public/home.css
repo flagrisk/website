@@ -28,7 +28,7 @@ a{text-decoration:none;color:inherit}
 .btn-lime{background:var(--lime);border-color:var(--lime);color:var(--lime-ink)}.btn-lime:hover{background:#c7e02c;border-color:#c7e02c}
 .btn-light{background:#fff;border-color:#fff;color:var(--ink)}.btn-light:hover{background:var(--paper)}
 .btn-outline{background:transparent;border-color:rgba(18,19,35,.2);color:var(--ink)}.btn-outline:hover{border-color:var(--ink)}
-.btn-ghost{background:transparent;border-color:rgba(255,255,255,.4);color:#fff}.btn-ghost:hover{background:rgba(255,255,255,.1);border-color:#fff}
+.btn-ghost{background:rgba(255,255,255,.12);border-color:rgba(255,255,255,.7);color:#fff;backdrop-filter:blur(6px)}.btn-ghost:hover{background:rgba(255,255,255,.22);border-color:#fff}
 /* circular-arrow link */
 .clink{display:inline-flex;align-items:center;gap:.7rem;font-family:'Hanken Grotesk';font-weight:700;font-size:1.02rem;color:var(--indigo)}
 .clink .a{width:36px;height:36px;border-radius:50%;border:1.6px solid currentColor;display:flex;align-items:center;justify-content:center;transition:background .2s,color .2s}
@@ -497,3 +497,29 @@ html{scroll-behavior:smooth}
   .tbl.kv td:first-child{width:auto}
   .tbl.kv td:first-child:before{display:none}
 }
+
+/* ===== request / compliance form ===== */
+.reqform{scroll-margin-top:100px;border-top:1px solid var(--line);margin-top:30px;padding-top:30px}
+.reqform h3{font-size:1.38rem;letter-spacing:-.025em;margin-bottom:10px}
+.reqform>p{color:var(--slate);margin-bottom:22px;max-width:640px}
+.frm .row2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.field{display:block;margin-bottom:16px}
+.field>span{display:block;font-size:.92rem;font-weight:600;color:var(--ink);margin-bottom:6px}
+.field .hint{font-weight:400;color:var(--mute);font-size:.86rem}
+.field input,.field select,.field textarea{width:100%;font-family:inherit;font-size:1rem;color:var(--ink);background:#fff;border:1.5px solid var(--line);border-radius:11px;padding:.8rem .9rem;transition:border-color .15s,box-shadow .15s}
+.field input:focus,.field select:focus,.field textarea:focus{outline:none;border-color:var(--night);box-shadow:0 0 0 3px rgba(27,30,61,.1)}
+.field textarea{resize:vertical;min-height:96px;line-height:1.5}
+.checkrow{display:flex;gap:12px;align-items:flex-start;margin:4px 0 20px}
+.checkrow input{margin-top:3px;width:18px;height:18px;flex:0 0 auto;accent-color:var(--night)}
+.checkrow label{font-size:.96rem;color:var(--slate);line-height:1.5}
+.hp{position:absolute!important;left:-9999px;width:1px;height:1px;overflow:hidden}
+.frm-actions{display:flex;align-items:center;gap:18px;flex-wrap:wrap}
+.frm button[type=submit]{display:inline-flex;align-items:center;border-radius:11px;background:var(--night);color:#fff;font-family:inherit;font-weight:600;font-size:1rem;padding:.9rem 1.7rem;border:1.6px solid var(--night);cursor:pointer;transition:background .2s}
+.frm button[type=submit]:hover{background:#24264a}
+.frm button[type=submit]:disabled{opacity:.55;cursor:default}
+.frm-msg{font-size:.95rem;line-height:1.5;margin:0}
+.frm-msg.err{color:#b4472a}
+.frm-ok{background:var(--parchment);border:1px solid var(--line);border-radius:16px;padding:26px 28px}
+.frm-ok h3{font-size:1.15rem;margin-bottom:8px;letter-spacing:-.02em}
+.frm-ok p{color:var(--slate);margin:0}
+@media(max-width:560px){.frm .row2{grid-template-columns:1fr}}
