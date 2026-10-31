@@ -10,6 +10,7 @@ import { CopyLink } from "@/components/dashboard/CopyLink";
 import { PayoutForm } from "@/components/dashboard/PayoutForm";
 import { PayoutAccountForm } from "@/components/dashboard/PayoutAccountForm";
 import { ShareMessages } from "@/components/dashboard/ShareMessages";
+import { SupportPanel } from "@/components/dashboard/SupportPanel";
 
 export type DashData = {
   email: string;
@@ -47,6 +48,9 @@ const I = {
   ),
   account: (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="8" r="4" /><path d="M4 20c0-4 3.6-6 8-6s8 2 8 6" /></svg>
+  ),
+  support: (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"><path d="M21 11.5a8.5 8.5 0 0 1-12.5 7.5L3 20l1.1-5.4A8.5 8.5 0 1 1 21 11.5z" /></svg>
   ),
 };
 
@@ -91,6 +95,7 @@ export function DashboardShell({ data }: { data: DashData }) {
     { key: "overview", label: "Overview", icon: I.overview },
     { key: "referrals", label: "Invite and earn", icon: I.referrals },
     { key: "payouts", label: "Payouts", icon: I.payouts },
+    { key: "support", label: "Support", icon: I.support },
     { key: "account", label: "Account", icon: I.account },
   ];
 
@@ -284,6 +289,8 @@ export function DashboardShell({ data }: { data: DashData }) {
               </div>
             </section>
           )}
+
+          {active === "support" && <SupportPanel />}
 
           {active === "account" && (
             <section>

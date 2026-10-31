@@ -246,3 +246,13 @@ h4 {
   .dash .d-content { padding:24px 18px 60px; width:100%; }
 }
 .dash .d-linkbtn { background:none; border:none; padding:0; color:var(--d-green); font-weight:600; font-family:inherit; font-size:inherit; cursor:pointer; text-decoration:underline; text-underline-offset:2px; }
+
+/* dashboard support panel */
+.dash .d-thread { display:flex; flex-direction:column; gap:10px; max-height:52vh; overflow-y:auto; padding:2px; }
+.dash .d-bub { max-width:84%; border:1px solid var(--d-line); border-radius:12px; padding:9px 12px; font-size:14px; line-height:1.5; white-space:pre-wrap; color:var(--d-ink); }
+.dash .d-bub.me { margin-left:auto; background:var(--d-surface-2); }
+.dash .d-bub.them { margin-right:auto; background:rgba(14,106,79,.08); }
+.dash .d-bub .who { font-size:11px; text-transform:uppercase; letter-spacing:.06em; color:var(--d-ink-faint); margin-bottom:3px; }
+.dash .d-tickrow { display:flex; align-items:center; gap:14px; width:100%; text-align:left; background:var(--d-surface); border:1px solid var(--d-line); border-radius:12px; padding:14px 16px; cursor:pointer; font-family:inherit; transition:border-color .15s, box-shadow .15s; }
+.dash .d-tickrow:hover { border-color:var(--d-line-2); box-shadow:var(--d-shadow); }
+.dash textarea.d-input { min-height:110px; resize:vertical; line-height:1.5; }
