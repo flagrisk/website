@@ -226,3 +226,23 @@ h4 {
 .dash .d-ok { color:var(--d-green); font-size:13px; }
 .dash a.d-link { color:var(--d-green); font-weight:600; }
 .dash h1, .dash h2, .dash h3, .dash h4 { font-family:inherit; font-weight:700; letter-spacing:-.02em; line-height:1.15; }
+
+/* dashboard app shell: console-style left nav + sections */
+.dash .d-shell { display:flex; align-items:flex-start; max-width:1180px; margin:0 auto; width:100%; }
+.dash .d-side { width:232px; flex:none; border-right:1px solid var(--d-line); min-height:calc(100vh - 58px); padding:18px 14px; position:sticky; top:58px; }
+.dash .d-navgroup { font-size:11px; text-transform:uppercase; letter-spacing:.07em; color:var(--d-ink-faint); font-weight:600; padding:10px 11px 6px; }
+.dash .d-navitem { display:flex; align-items:center; gap:10px; width:100%; text-align:left; background:transparent; border:1px solid transparent; color:var(--d-ink-soft); border-radius:8px; padding:9px 11px; font-size:14px; font-weight:500; font-family:inherit; cursor:pointer; transition:background .15s, color .15s; }
+.dash .d-navitem:hover { background:var(--d-surface-3); color:var(--d-ink); }
+.dash .d-navitem.active { background:rgba(14,106,79,.10); color:var(--d-green); }
+.dash .d-navitem svg { width:17px; height:17px; flex:none; }
+.dash .d-content { flex:1; min-width:0; padding:30px 32px 72px; }
+.dash .d-page-h { font-size:22px; font-weight:700; letter-spacing:-.02em; color:var(--d-ink); }
+.dash .d-page-sub { color:var(--d-ink-soft); font-size:14px; margin-top:3px; margin-bottom:24px; }
+@media (max-width:760px) {
+  .dash .d-shell { flex-direction:column; }
+  .dash .d-side { width:100%; position:static; min-height:0; border-right:none; border-bottom:1px solid var(--d-line); display:flex; gap:6px; overflow-x:auto; padding:10px 12px; }
+  .dash .d-navgroup { display:none; }
+  .dash .d-navitem { width:auto; white-space:nowrap; }
+  .dash .d-content { padding:24px 18px 60px; width:100%; }
+}
+.dash .d-linkbtn { background:none; border:none; padding:0; color:var(--d-green); font-weight:600; font-family:inherit; font-size:inherit; cursor:pointer; text-decoration:underline; text-underline-offset:2px; }

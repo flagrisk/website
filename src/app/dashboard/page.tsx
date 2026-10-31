@@ -1,15 +1,11 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient, createServiceClient } from "@/lib/supabase/server";
-import { signOutAction } from "@/lib/actions/auth";
-import { formatNaira } from "@/lib/tiers";
-import { REFERRAL_REWARDS, MILESTONE_LABEL } from "@/lib/referrals";
-import { CopyLink } from "@/components/dashboard/CopyLink";
-import { PayoutForm } from "@/components/dashboard/PayoutForm";
-import { PayoutAccountForm } from "@/components/dashboard/PayoutAccountForm";
-import { ShareMessages } from "@/components/dashboard/ShareMessages";
 import { listBanks, type Bank } from "@/lib/paystack";
+import {
+  DashboardShell,
+  type DashData,
+} from "@/components/dashboard/DashboardShell";
 
 export const metadata: Metadata = { title: "Dashboard" };
 
@@ -120,183 +116,28 @@ export default async function DashboardPage() {
     shareName = "";
   }
 
-  const maxReward =
-    REFERRAL_REWARDS.signup +
-    REFERRAL_REWARDS.circle +
-    REFERRAL_REWARDS.paid_plan;
-
-  return (
-    <main className="dash">
-      {/* top bar */}
-      <header className="d-topbar">
-        <div className="mx-auto flex max-w-[960px] items-center justify-between px-5 py-3.5">
-          <Link
-            href="/"
-            className="flex items-center gap-2"
-            aria-label="FlagRisk home"
-          >
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/img/logo.png" alt="" className="h-7 w-7 rounded-[7px]" />
-            <span className="d-word">FlagRisk</span>
-          </Link>
-          <div className="flex items-center gap-4">
-            <span
-              className="hidden text-[13px] sm:inline"
-              style={{ color: "var(--d-ink-soft)" }}
-            >
-              {user.email}
-            </span>
-            <form action={signOutAction}>
-              <button className="d-btn">Log out</button>
-            </form>
-          </div>
-        </div>
-      </header>
-
-      <div className="mx-auto max-w-[960px] px-5 py-10">
-        <h1 className="d-h1">
-          Welcome{displayName ? `, ${displayName}` : ""}
-        </h1>
-        <p className="d-sub">Your plan, your circle, your earnings.</p>
-
-        <div className="mt-8 grid gap-6 md:grid-cols-2">
-          {/* Subscription */}
-          <section className="d-card">
-            <h2 className="d-eyebrow">Your plan</h2>
-            <p className="d-big">{subTier}</p>
-            <p className="d-note" style={{ marginTop: 4 }}>
-              {isPaid ? "Active" : "Free plan, upgrade any time"}
-            </p>
-            <Link
-              href="/plans"
-              className="d-btn d-btn-primary"
-              style={{ marginTop: 18 }}
-            >
-              {isPaid ? "Change plan" : "Upgrade"}
-            </Link>
-          </section>
-
-          {/* Earnings */}
-          <section className="d-card">
-            <h2 className="d-eyebrow">Referral earnings</h2>
-            <p className="d-big">{formatNaira(balance.available_naira)}</p>
-            <p className="d-note" style={{ marginTop: 4 }}>
-              available · {formatNaira(balance.earned_naira)} earned in total
-            </p>
-            <div className="mt-4">
-              <PayoutForm
-                available={balance.available_naira}
-                hasAccount={!!recipient}
-              />
-            </div>
-          </section>
-        </div>
-
-        {/* Referral link + progress */}
-        <section className="d-card mt-6">
-          <h2 className="d-eyebrow">Invite and earn</h2>
-          <p
-            className="d-note"
-            style={{ marginTop: 8, color: "var(--d-ink)" }}
-          >
-            Share your link. You earn up to {formatNaira(maxReward)} for every
-            person who joins, builds a circle, and starts a paid plan.
-          </p>
-          <div className="mt-4 max-w-[520px]">
-            <CopyLink url={referralUrl} />
-          </div>
-
-          <div className="mt-6 grid gap-3 sm:grid-cols-3">
-            <Stat label="People joined" value={referralCount} />
-            {(Object.keys(REFERRAL_REWARDS) as Array<keyof typeof REFERRAL_REWARDS>).map(
-              (m) => (
-                <Stat
-                  key={m}
-                  label={MILESTONE_LABEL[m]}
-                  value={rewardCounts[m] ?? 0}
-                  hint={`${formatNaira(REFERRAL_REWARDS[m])} each`}
-                />
-              ),
-            )}
-          </div>
-
-          <ShareMessages
-            shareName={shareName}
-            botNumber={process.env.NEXT_PUBLIC_WHATSAPP_BOT_NUMBER ?? ""}
-          />
-        </section>
-
-        {/* Payout account */}
-        <section className="d-card mt-6">
-          <h2 className="d-eyebrow">Payout account</h2>
-          <p className="d-note" style={{ margin: "8px 0 16px" }}>
-            Where we send your referral earnings when you withdraw.
-          </p>
-          <div className="max-w-[440px]">
-            <PayoutAccountForm
-              banks={banks}
-              current={recipient?.account_name ?? null}
-            />
-          </div>
-        </section>
-
-        {/* Payout history */}
-        <section className="d-card mt-6">
-          <h2 className="d-eyebrow">Withdrawals</h2>
-          {payouts && payouts.length > 0 ? (
-            <table className="d-table" style={{ marginTop: 14 }}>
-              <tbody>
-                {payouts.map((p) => (
-                  <tr key={p.id}>
-                    <td style={{ fontWeight: 600 }}>
-                      {formatNaira(p.amount_naira)}
-                    </td>
-                    <td style={{ color: "var(--d-ink-soft)" }}>
-                      {new Date(p.created_at).toLocaleDateString("en-NG")}
-                    </td>
-                    <td style={{ textAlign: "right" }}>
-                      <PayoutStatus status={p.status} />
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          ) : (
-            <p className="d-note" style={{ marginTop: 12 }}>
-              No withdrawals yet.
-            </p>
-          )}
-        </section>
-      </div>
-    </main>
-  );
-}
-
-function Stat({
-  label,
-  value,
-  hint,
-}: {
-  label: string;
-  value: number;
-  hint?: string;
-}) {
-  return (
-    <div className="d-stat">
-      <p className="n">{value}</p>
-      <p className="l">{label}</p>
-      {hint && <p className="h">{hint}</p>}
-    </div>
-  );
-}
-
-function PayoutStatus({ status }: { status: string }) {
-  const map: Record<string, string> = {
-    pending: "warn",
-    processing: "warn",
-    paid: "ok",
-    failed: "bad",
-    reversed: "bad",
+  const data: DashData = {
+    email: user.email ?? "",
+    displayName,
+    subTier,
+    isPaid,
+    availableNaira: balance.available_naira,
+    earnedNaira: balance.earned_naira,
+    referralCount,
+    rewardCounts,
+    referralUrl,
+    hasAccount: !!recipient,
+    currentAccount: recipient?.account_name ?? null,
+    banks,
+    payouts: (payouts ?? []).map((p) => ({
+      id: String(p.id),
+      amount_naira: p.amount_naira as number,
+      status: p.status as string,
+      created_at: p.created_at as string,
+    })),
+    shareName,
+    botNumber: process.env.NEXT_PUBLIC_WHATSAPP_BOT_NUMBER ?? "",
   };
-  return <span className={`d-pill ${map[status] ?? "mut"}`}>{status}</span>;
+
+  return <DashboardShell data={data} />;
 }
