@@ -468,8 +468,11 @@ html{scroll-behavior:smooth}
 .tbl td{padding:11px 14px;border:1px solid var(--line);color:var(--slate);vertical-align:top;line-height:1.55}
 .tbl.kv td:first-child{font-weight:600;color:var(--ink);width:38%}
 .doc-end{margin-top:30px;color:var(--mute);font-size:.94rem}
-.btn-l{display:inline-flex;align-items:center;border-radius:11px;background:var(--lime);color:var(--lime-ink);font-weight:600;padding:.85rem 1.4rem}
-.btn-l:hover{background:#c7e02c}
+.btn-l{display:inline-flex;align-items:center;border-radius:11px;background:var(--night);color:#fff;font-weight:600;padding:.85rem 1.5rem;border:1.6px solid var(--night);text-decoration:none}
+.btn-l:hover{background:#24264a;border-color:#24264a}
+/* buttons inside the legal/notice bodies never get the link underline */
+.doc-body a.btn,.doc-body a.btn-l,.doc-body a.btn-lime,.doc-body a.btn-dark,.doc-body a.btn-outline,.notice a.btn,.notice a.btn-l,.notice a.btn-lime{text-decoration:none}
+.doc-body a.btn-l,.notice a.btn-l{color:#fff}
 /* contact */
 .cgrid{display:grid;grid-template-columns:repeat(2,1fr);gap:22px;padding:8px 0 20px}
 .ccard{border:1px solid var(--line);border-radius:18px;padding:30px;background:#fff;box-shadow:var(--sh)}
