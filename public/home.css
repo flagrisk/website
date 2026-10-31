@@ -388,3 +388,15 @@ html{scroll-behavior:smooth}
 .cb .ic.l{background:#edf3cf;color:#67760a}
 .cb .ic.lime{background:var(--lime);color:var(--lime-ink)}
 @media(max-width:940px){.capsbento{grid-template-columns:1fr}.cb.tall,.cb.wide{grid-row:auto;grid-column:auto}}
+/* ===== What we do: deeper-dive additions ===== */
+.feat .copy .flist{list-style:none;margin:16px 0 0;padding:0;display:flex;flex-direction:column;gap:9px}
+.feat .copy .flist li{display:flex;gap:10px;align-items:flex-start;font-size:.98rem;color:var(--slate)}
+.feat .copy .flist svg{width:17px;height:17px;color:var(--teal);flex:none;margin-top:3px}
+.stepnum{font-family:'Hanken Grotesk';font-weight:800;font-size:1.4rem;color:var(--teal)}
+.channels{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-top:42px}
+.chcard{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.13);border-radius:16px;padding:24px}
+.chcard .k{font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--lime)}
+.chcard h3{color:#fff;font-size:1.22rem;margin-top:7px}
+.chcard p{color:rgba(255,255,255,.72);font-size:.92rem;margin-top:9px;line-height:1.55}
+@media(max-width:940px){.channels{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:560px){.channels{grid-template-columns:1fr}}
