@@ -38,6 +38,15 @@ const nextConfig: NextConfig = {
     return {
       beforeFiles: [
         { source: `/${ADMIN_CONSOLE_PATH}`, destination: "/console.html" },
+        // Marketing site: the design pages are served as isolated static HTML
+        // (public/*.html) so they render exactly as designed, independent of the
+        // app's React/Tailwind styles. The functional app routes (signup, login,
+        // checkout, dashboard) are unchanged.
+        { source: "/", destination: "/home.html" },
+        { source: "/what-we-do", destination: "/what-we-do.html" },
+        { source: "/about", destination: "/about.html" },
+        { source: "/stories", destination: "/stories.html" },
+        { source: "/pricing", destination: "/pricing.html" },
       ],
       afterFiles: [],
       fallback: [],
