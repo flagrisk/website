@@ -61,7 +61,7 @@ a{text-decoration:none;color:inherit}
 .feat.rev{grid-template-columns:1.14fr .86fr}.feat.rev .copy{order:2;padding:64px 60px 64px 24px}
 .feat.rev .vis{order:1}
 .feat .copy .eyebrow{margin-bottom:18px}
-.feat .copy p{margin-top:18px;max-width:420px;font-size:1.1rem;color:var(--slate)}
+.feat .copy p{margin-top:18px;max-width:430px;font-size:1.08rem;color:#2c3047}
 .feat .copy .cta-row{margin-top:30px;display:flex;gap:14px;flex-wrap:wrap;align-items:center}
 .feat .vis{position:relative;overflow:hidden;min-height:480px}
 /* contained content section + full-bleed band inner */
@@ -396,7 +396,7 @@ html{scroll-behavior:smooth}
 @media(max-width:940px){.capsbento{grid-template-columns:1fr}.cb.tall,.cb.wide{grid-row:auto;grid-column:auto}}
 /* ===== What we do: deeper-dive additions ===== */
 .feat .copy .flist{list-style:none;margin:16px 0 0;padding:0;display:flex;flex-direction:column;gap:9px}
-.feat .copy .flist li{display:flex;gap:10px;align-items:flex-start;font-size:.98rem;color:var(--slate)}
+.feat .copy .flist li{display:flex;gap:10px;align-items:center;font-size:.98rem;color:#2c3047}
 .feat .copy .flist svg{width:17px;height:17px;color:var(--teal);flex:none;margin-top:3px}
 .stepnum{font-family:'Hanken Grotesk';font-weight:800;font-size:1.4rem;color:var(--teal)}
 .channels{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-top:42px}
