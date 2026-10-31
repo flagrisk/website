@@ -649,14 +649,18 @@ const NAV_GROUPS = [
   { label: "System",        keys: ["system", "settings"] },
 ];
 const CHEV = '<svg class="chev" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>';
+// Groups start collapsed by default, except these which open on a fresh browser.
+const NAV_DEFAULT_OPEN = { "Overview": true, "Growth": true };
 function getNavCollapsed() { try { return JSON.parse(localStorage.getItem("fr-nav-collapsed") || "{}"); } catch (e) { return {}; } }
 function setNavCollapsed(state) { try { localStorage.setItem("fr-nav-collapsed", JSON.stringify(state)); } catch (e) {} }
+// A saved choice wins; otherwise fall back to the default-open set.
+function navIsCollapsed(label, saved) { return (label in saved) ? !!saved[label] : !NAV_DEFAULT_OPEN[label]; }
 function toggleNavGroup(label) {
   const g = document.querySelector('.nav-group[data-group="' + label + '"]');
   if (!g) return;
   const col = g.classList.toggle("collapsed");
   const state = getNavCollapsed();
-  if (col) state[label] = true; else delete state[label];
+  state[label] = col;
   setNavCollapsed(state);
 }
 function buildNav() {
@@ -673,7 +677,7 @@ function buildNav() {
     const keys = g.keys.filter((k) => allowed.indexOf(k) >= 0 && byKey[k]);
     if (!keys.length) return;
     keys.forEach((k) => { used[k] = true; });
-    const isCol = !!collapsed[g.label];
+    const isCol = navIsCollapsed(g.label, collapsed);
     html += '<div class="nav-group' + (isCol ? " collapsed" : "") + '" data-group="' + esc(g.label) + '">' +
       '<button class="nav-ghead" data-group="' + esc(g.label) + '"><span>' + esc(g.label) + '</span>' + CHEV + '</button>' +
       '<div class="nav-gitems">' + keys.map((k) => itemHtml(byKey[k])).join("") + '</div></div>';
@@ -681,7 +685,7 @@ function buildNav() {
   // Any allowed section not placed in a group still shows, under "Other".
   const leftover = allowed.filter((k) => !used[k] && byKey[k]);
   if (leftover.length) {
-    const isCol = !!collapsed["Other"];
+    const isCol = navIsCollapsed("Other", collapsed);
     html += '<div class="nav-group' + (isCol ? " collapsed" : "") + '" data-group="Other">' +
       '<button class="nav-ghead" data-group="Other"><span>Other</span>' + CHEV + '</button>' +
       '<div class="nav-gitems">' + leftover.map((k) => itemHtml(byKey[k])).join("") + '</div></div>';
