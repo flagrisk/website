@@ -106,17 +106,19 @@
 
   /* grouped, collapsible nav */
   .nav-group { display: flex; flex-direction: column; gap: 3px; }
+  .nav-group + .nav-group { border-top: 1px solid var(--line); margin-top: 6px; padding-top: 4px; }
   .nav-ghead {
     display: flex; align-items: center; justify-content: space-between; width: 100%;
     background: transparent; border: none; cursor: pointer; font-family: var(--ui);
-    font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.1em;
-    color: var(--ink-faint); font-weight: 600; padding: 10px 11px 6px; margin-top: 4px;
+    font-size: 11px; text-transform: uppercase; letter-spacing: 0.13em;
+    color: var(--ink); font-weight: 700; padding: 11px 10px 7px;
   }
-  .nav-ghead:hover { color: var(--ink-soft); }
-  .nav-ghead .chev { transition: transform 0.15s var(--ease); opacity: 0.75; flex: none; }
+  .nav-ghead > span:first-child { opacity: 0.62; }
+  .nav-ghead:hover > span:first-child { opacity: 0.9; }
+  .nav-ghead .chev { transition: transform 0.15s var(--ease); opacity: 0.45; flex: none; }
   .nav-group.collapsed .nav-ghead .chev { transform: rotate(-90deg); }
   .nav-group.collapsed .nav-gitems { display: none; }
-  .nav-gitems { display: flex; flex-direction: column; gap: 3px; }
+  .nav-gitems { display: flex; flex-direction: column; gap: 3px; padding-left: 5px; }
 
   .main { overflow: hidden; position: relative; min-width: 0; }
   .section { height: 100%; }
@@ -649,26 +651,36 @@ const NAV_GROUPS = [
   { label: "System",        keys: ["system", "settings"] },
 ];
 const CHEV = '<svg class="chev" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>';
-// Groups start collapsed by default, except these which open on a fresh browser.
-const NAV_DEFAULT_OPEN = { "Overview": true, "Growth": true };
-function getNavCollapsed() { try { return JSON.parse(localStorage.getItem("fr-nav-collapsed") || "{}"); } catch (e) { return {}; } }
-function setNavCollapsed(state) { try { localStorage.setItem("fr-nav-collapsed", JSON.stringify(state)); } catch (e) {} }
-// A saved choice wins; otherwise fall back to the default-open set.
-function navIsCollapsed(label, saved) { return (label in saved) ? !!saved[label] : !NAV_DEFAULT_OPEN[label]; }
+// Accordion nav: the active section's group is the one left open. On the home
+// landing (Overview) Growth is opened too, so a fresh tab shows both. Moving to
+// any section opens only that section's group and collapses the rest. A group
+// header can still be toggled by hand; the next navigation re-applies the
+// accordion. Nothing is persisted, so a fresh tab always starts at the default.
+let openGroups = new Set(["Overview", "Growth"]);
+function groupOfKey(key) {
+  for (const g of NAV_GROUPS) { if (g.keys.indexOf(key) >= 0) return g.label; }
+  return "Other";
+}
+function openForKey(key) {
+  const label = groupOfKey(key);
+  const set = new Set([label]);
+  if (label === "Overview") set.add("Growth");
+  return set;
+}
+function applyOpenGroups() {
+  document.querySelectorAll(".nav-group").forEach((el) => {
+    el.classList.toggle("collapsed", !openGroups.has(el.getAttribute("data-group")));
+  });
+}
 function toggleNavGroup(label) {
-  const g = document.querySelector('.nav-group[data-group="' + label + '"]');
-  if (!g) return;
-  const col = g.classList.toggle("collapsed");
-  const state = getNavCollapsed();
-  state[label] = col;
-  setNavCollapsed(state);
+  if (openGroups.has(label)) openGroups.delete(label); else openGroups.add(label);
+  applyOpenGroups();
 }
 function buildNav() {
   const nav = $("sidenav");
   const allowed = capsSections();
   if (!allowed.length) { nav.innerHTML = '<div class="nav-label">Operations</div><div style="padding:10px 12px;color:var(--ink-soft);font-size:13px;">No sections are enabled for this account.</div>'; return; }
   const byKey = {}; SECTIONS.forEach((s) => { byKey[s.key] = s; });
-  const collapsed = getNavCollapsed();
   const itemHtml = (s) => '<button class="navitem" data-key="' + s.key + '">' + (ICONS[s.key] || "") + '<span>' + esc(s.label) + '</span>' +
     (s.key === "moderation" ? '<span class="nav-count zero" id="navCount">0</span>' : '') + '</button>';
   const used = {};
@@ -677,7 +689,7 @@ function buildNav() {
     const keys = g.keys.filter((k) => allowed.indexOf(k) >= 0 && byKey[k]);
     if (!keys.length) return;
     keys.forEach((k) => { used[k] = true; });
-    const isCol = navIsCollapsed(g.label, collapsed);
+    const isCol = !openGroups.has(g.label);
     html += '<div class="nav-group' + (isCol ? " collapsed" : "") + '" data-group="' + esc(g.label) + '">' +
       '<button class="nav-ghead" data-group="' + esc(g.label) + '"><span>' + esc(g.label) + '</span>' + CHEV + '</button>' +
       '<div class="nav-gitems">' + keys.map((k) => itemHtml(byKey[k])).join("") + '</div></div>';
@@ -685,7 +697,7 @@ function buildNav() {
   // Any allowed section not placed in a group still shows, under "Other".
   const leftover = allowed.filter((k) => !used[k] && byKey[k]);
   if (leftover.length) {
-    const isCol = navIsCollapsed("Other", collapsed);
+    const isCol = !openGroups.has("Other");
     html += '<div class="nav-group' + (isCol ? " collapsed" : "") + '" data-group="Other">' +
       '<button class="nav-ghead" data-group="Other"><span>Other</span>' + CHEV + '</button>' +
       '<div class="nav-gitems">' + leftover.map((k) => itemHtml(byKey[k])).join("") + '</div></div>';
@@ -700,6 +712,9 @@ function switchSection(key) {
   activeSection = key;
   SECTIONS.forEach((s) => { const el = $("sec-" + s.key); if (el) el.classList.toggle("hidden", s.key !== key); });
   document.querySelectorAll(".navitem").forEach((el) => el.classList.toggle("active", el.dataset.key === key));
+  // Accordion: leave only the active section's group open.
+  openGroups = openForKey(key);
+  applyOpenGroups();
   const s = SECTIONS.find((x) => x.key === key); if (s) s.load();
 }
 
