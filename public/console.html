@@ -700,9 +700,6 @@ function switchSection(key) {
   activeSection = key;
   SECTIONS.forEach((s) => { const el = $("sec-" + s.key); if (el) el.classList.toggle("hidden", s.key !== key); });
   document.querySelectorAll(".navitem").forEach((el) => el.classList.toggle("active", el.dataset.key === key));
-  // Keep the active item visible even if its group was collapsed.
-  const activeBtn = document.querySelector('.navitem[data-key="' + key + '"]');
-  if (activeBtn) { const grp = activeBtn.closest(".nav-group"); if (grp) grp.classList.remove("collapsed"); }
   const s = SECTIONS.find((x) => x.key === key); if (s) s.load();
 }
 
