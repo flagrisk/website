@@ -837,8 +837,17 @@ async function act(action, q) {
 // ============================================================
 function addBaseTiles() {
   const dark = document.documentElement.dataset.theme === "dark";
-  const url = dark ? "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png" : "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png";
-  L.tileLayer(url, { maxZoom: 19 }).addTo(mapObj);
+  // OpenStreetMap standard tiles need no API key. Carto's basemaps now require
+  // one and otherwise serve "API KEY REQUIRED" watermarked tiles.
+  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+    maxZoom: 19,
+    subdomains: "abc",
+    attribution: '&copy; OpenStreetMap contributors',
+  }).addTo(mapObj);
+  // OSM has only a light theme, so in dark mode invert the base tiles to match
+  // the console. Markers live on a separate pane and are left untouched.
+  const pane = mapObj.getPane && mapObj.getPane("tilePane");
+  if (pane) pane.style.filter = dark ? "invert(1) hue-rotate(180deg) brightness(0.9) contrast(0.95)" : "";
 }
 async function loadOverview() {
   const el = $("sec-overview");
@@ -860,7 +869,7 @@ async function loadOverview() {
 }
 async function drawThreatMap() {
   const node = $("threatMap"); if (!node || typeof L === "undefined") return;
-  if (!mapObj) { mapObj = L.map(node, { zoomControl: true, attributionControl: false }).setView([9.06, 7.49], 6); addBaseTiles(); mapLayer = L.layerGroup().addTo(mapObj); }
+  if (!mapObj) { mapObj = L.map(node, { zoomControl: true, attributionControl: true }).setView([9.06, 7.49], 6); mapObj.attributionControl.setPrefix(false); addBaseTiles(); mapLayer = L.layerGroup().addTo(mapObj); }
   mapObj.invalidateSize();
   const { data, error } = await supabase.rpc("admin_incidents", { p_limit: 300 });
   if (error || !data) return;
