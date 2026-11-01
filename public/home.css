@@ -187,7 +187,7 @@ a{text-decoration:none;color:inherit}
 .ftr-main .wrap{display:grid;grid-template-columns:1.6fr 1fr 1fr 1fr;gap:44px;padding:64px 32px 40px}
 .ftr-main .blurb{max-width:300px;color:rgba(255,255,255,.62);font-size:.96rem;margin-top:18px;line-height:1.65}
 .ftr .soc{display:flex;gap:4px;align-items:center}
-.ftr .soc a{display:block;transform-origin:bottom center;filter:drop-shadow(0 7px 9px rgba(0,0,0,.45));transition:transform .15s ease,filter .15s ease}
+.ftr .soc a{display:block;transform-origin:bottom center;filter:drop-shadow(0 7px 9px rgba(0,0,0,.45));transition:transform .32s cubic-bezier(.2,.7,.2,1),filter .32s cubic-bezier(.2,.7,.2,1)}
 .ftr .soc a:hover{transform:translateY(7px) scaleY(.66);filter:drop-shadow(0 1px 2px rgba(0,0,0,.3))}
 .ftr .soc a:active{transform:translateY(9px) scaleY(.58);filter:drop-shadow(0 1px 1px rgba(0,0,0,.28))}
 .ftr .soc a img{width:54px;height:auto;display:block}
